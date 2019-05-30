@@ -197,7 +197,7 @@ thread_create (const char *name, int priority,
   sf = alloc_frame (t, sizeof *sf);
   sf->eip = switch_entry;
   sf->ebp = 0;
-  t->block_ticks = 0;
+
   /* Add to run queue. */
   thread_unblock (t);
 
@@ -213,11 +213,11 @@ thread_create (const char *name, int priority,
 void
 thread_block (void)
 {
-  ASSERT (!intr_context ());//1
-  ASSERT (intr_get_level () == INTR_OFF);//2
+  ASSERT (!intr_context ());
+  ASSERT (intr_get_level () == INTR_OFF);
 
-  thread_current ()->status = THREAD_BLOCKED;//3
-  schedule ();//4
+  thread_current ()->status = THREAD_BLOCKED;
+  schedule ();
 }
 
 /* Transitions a blocked thread T to the ready-to-run state.
@@ -334,18 +334,7 @@ thread_foreach (thread_action_func *func, void *aux)
       func (t, aux);
     }
 }
-void thread_block_ticks(struct thread *t,void * aux UNUSED )
- {
-   if(t->status == THREAD_BLOCKED && t->block_ticks >0){
-	t->block_ticks--;
-   if(t->block_ticks == 0)
-	thread_unblock(t); 
-}
-	//t->ticks--;
-     //	if(t->ticks == 0)
-//		thread_unblock(t);//如果ticks为0,则unblcok这个进程
-//	t->ticks--;
-}
+
 /* Sets the current thread's priority to NEW_PRIORITY. */
 void
 thread_set_priority (int new_priority)
@@ -478,7 +467,7 @@ init_thread (struct thread *t, const char *name, int priority)
   t->stack = (uint8_t *) t + PGSIZE;
   t->priority = priority;
   t->magic = THREAD_MAGIC;
-  //t->ticks = 0;
+
   old_level = intr_disable ();
   list_push_back (&all_list, &t->allelem);
   intr_set_level (old_level);
@@ -567,8 +556,8 @@ thread_schedule_tail (struct thread *prev)
 static void
 schedule (void)
 {
-  struct thread *cur = running_thread ();//1,cur是当前正在执行的线程执行指针
-  struct thread *next = next_thread_to_run ();//2
+  struct thread *cur = running_thread ();//1,cur是当前正在执行的线程
+  struct thread *next = next_thread_to_run ();//2,从就绪队列拿到第一个线程
   struct thread *prev = NULL;//3
 
   ASSERT (intr_get_level () == INTR_OFF);//4

@@ -91,11 +91,31 @@ timer_sleep (int64_t ticks)
 { 
   if(ticks <= 0)
 	return ;
-  int64_t start = timer_ticks ();
-
+  //int64_t start = timer_ticks ();
+   //start是此时刻t0的时间
   ASSERT (intr_get_level () == INTR_ON);
-  while (timer_elapsed (start) < ticks)
-    thread_yield ();
+   ASSERT (intr_get_level () == INTR_ON);
+  enum intr_level old_level = intr_disable ();
+  struct thread *current_thread = thread_current ();
+  current_thread->block_ticks = ticks;
+   thread_block ();
+  intr_set_level (old_level);
+  /*enum intr_level old_level = intr_disable();
+  struct thread *t = thread_current();//得到当前正在执行的进程
+  t->block_ticks = ticks;
+  thread_block();//阻塞进程*/
+    //nt64_t start = timer_ticks ();
+
+  //ASSERT (intr_get_level () == INTR_ON);
+  //while (timer_elapsed (start) < ticks)
+   // thread_yield ();
+ //thread_foreach(thread_block_ticks,NULL);
+/*  intr_set_level(old_level);*/
+ //timer_elapsed(start) 为t1与t0的时间差，
+//记为t3，然后如果t3 < ticks,执行一次thread_yield
+//然后继续while循环，此时t1变化，
+  //while (timer_elapsed (start) < ticks)
+    //thread_yield ();
 }
 
 /* Sleeps for approximately MS milliseconds.  Interrupts must be
@@ -173,7 +193,11 @@ static void
 timer_interrupt (struct intr_frame *args UNUSED)
 {
   ticks++;
+  //thread_foreach(thread_block_ticks,NULL);
+
   thread_tick ();
+//    thread_tick ();
+  thread_foreach(thread_block_ticks,NULL);
 }
 
 /* Returns true if LOOPS iterations waits for more than one timer
