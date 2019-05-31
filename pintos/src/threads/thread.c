@@ -237,9 +237,14 @@ thread_unblock (struct thread *t)
 
   old_level = intr_disable ();
   ASSERT (t->status == THREAD_BLOCKED);
-  list_push_back (&ready_list, &t->elem);
+  list_insert_ordered(&ready_list,&t->elem,(list_less_func *) &thread_cmp_priority,NULL);
+//  list_push_back (&ready_list, &t->elem);
   t->status = THREAD_READY;
   intr_set_level (old_level);
+}
+bool thread_cmp_priority(const struct list_elem *a,const struct list_elem *b, void * aux UNUSED)
+{
+ 	return list_entry(a,struct thread, elem)->priority > list_entry(b, struct thread ,elem)->priority;
 }
 
 /* Returns the name of the running thread. */
@@ -308,7 +313,9 @@ thread_yield (void)
 
   old_level = intr_disable ();//5
   if (cur != idle_thread)//5.5
-    list_push_back (&ready_list, &cur->elem);//6
+	  list_insert_ordered(&ready_list,&cur->elem,(list_less_func *) &thread_cmp_priority,NULL);
+
+    //list_push_back (&ready_list, &cur->elem);//6
 	//解析6
  //5.5到6的作用:如果cur 不是idle_thread,将它插入read_list尾部
 
@@ -480,7 +487,9 @@ init_thread (struct thread *t, const char *name, int priority)
   t->magic = THREAD_MAGIC;
   //t->ticks = 0;
   old_level = intr_disable ();
-  list_push_back (&all_list, &t->allelem);
+    list_insert_ordered(&all_list,&t->allelem,(list_less_func *) &thread_cmp_priority,NULL);
+
+//  list_push_back (&all_list, &t->allelem);
   intr_set_level (old_level);
 }
 
