@@ -198,9 +198,11 @@ thread_create (const char *name, int priority,
   sf->eip = switch_entry;
   sf->ebp = 0;
   t->block_ticks = 0;
+  
   /* Add to run queue. */
   thread_unblock (t);
-
+ if(thread_current()->priority < t->priority)
+	thread_yield();
   return tid;
 }
 
@@ -240,6 +242,9 @@ thread_unblock (struct thread *t)
   list_insert_ordered(&ready_list,&t->elem,(list_less_func *) &thread_cmp_priority,NULL);
 //  list_push_back (&ready_list, &t->elem);
   t->status = THREAD_READY;
+  //schedule();//开始调度
+  //my code 
+  //thread_yield();
   intr_set_level (old_level);
 }
 bool thread_cmp_priority(const struct list_elem *a,const struct list_elem *b, void * aux UNUSED)
@@ -327,16 +332,13 @@ thread_yield (void)
 
 /* Invoke function 'func' on all threads, passing along 'aux'.
    This function must be called with interrupts off. */
-void
-thread_foreach (thread_action_func *func, void *aux)
+void thread_foreach (thread_action_func *func, void *aux)
 {
   struct list_elem *e;
 
   ASSERT (intr_get_level () == INTR_OFF);
 
-  for (e = list_begin (&all_list); e != list_end (&all_list);
-       e = list_next (e))
-    {
+  for (e = list_begin (&all_list); e != list_end (&all_list);e = list_next (e)){
       struct thread *t = list_entry (e, struct thread, allelem);
       func (t, aux);
     }
@@ -358,6 +360,7 @@ void
 thread_set_priority (int new_priority)
 {
   thread_current ()->priority = new_priority;
+  thread_yield();
 }
 
 /* Returns the current thread's priority. */
@@ -583,7 +586,7 @@ schedule (void)
   ASSERT (intr_get_level () == INTR_OFF);//4
   ASSERT (cur->status != THREAD_RUNNING);//5
   ASSERT (is_thread (next));//6
-
+  //printf("cur's status is %s\n", cur->status);
   if (cur != next)//7
     prev = switch_threads (cur, next);//8
   thread_schedule_tail (prev);//9

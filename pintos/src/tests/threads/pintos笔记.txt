@@ -1,0 +1,5 @@
+1 priority_donate_one解决一部分方法之一:将sema_down函数的 list_push_back (&sema->waiters, &thread_current ()->elem)改为  list_insert_ordered(&sema->waiters,&thread_current()->elem,(list_less_func *) &thread_cmp_priority,NULL);保证在lock_acquire后，让线程按优先级从大到小排列进入睡眠中，
+ 而在lock_realse()函数后，释放锁，这时候从sema->waiter这个链表中找到优先级最大的线程，获得CPU，然后现在只剩如何在lock_acquire后，如何让main的优先级提高
+	-20190601
+
+
