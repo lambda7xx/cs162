@@ -100,6 +100,7 @@ struct thread
     uint32_t *pagedir;                  /* Page directory. */
 #endif
     int64_t block_ticks ;
+    int old_priority;
     /* Owned by thread.c. */
     unsigned magic;                     /* Detects stack overflow. */
   };
