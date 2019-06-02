@@ -39,47 +39,53 @@ test_priority_donate_nest (void)
   lock_init (&a);
   lock_init (&b);
 
-  lock_acquire (&a);
+  lock_acquire (&a);//1
 
-  locks.a = &a;
-  locks.b = &b;
-  thread_create ("medium", PRI_DEFAULT + 1, medium_thread_func, &locks);
-  thread_yield ();
+  locks.a = &a;//2
+  locks.b = &b;//3
+  thread_create ("medium", PRI_DEFAULT + 1, medium_thread_func, &locks);//4
+  thread_yield ();//5
   msg ("Low thread should have priority %d.  Actual priority: %d.",
-       PRI_DEFAULT + 1, thread_get_priority ());
+       PRI_DEFAULT + 1, thread_get_priority ());//6
 
-  thread_create ("high", PRI_DEFAULT + 2, high_thread_func, &b);
-  thread_yield ();
+  thread_create ("high", PRI_DEFAULT + 2, high_thread_func, &b);//7
+  //printf("before 8,the current thread's name is %s\n", thread_current()->name ); main
+  thread_yield ();//8
+  //printf("after 8,the current thread's name is %s\n", thread_current()->name); main
   msg ("Low thread should have priority %d.  Actual priority: %d.",
-       PRI_DEFAULT + 2, thread_get_priority ());
+       PRI_DEFAULT + 2, thread_get_priority ());//9
 
-  lock_release (&a);
-  thread_yield ();
-  msg ("Medium thread should just have finished.");
+  lock_release (&a);//10
+ //  printf("before 11,the current thread's name is %s\n", thread_current()->name);main
+
+  thread_yield ();//11
+   //printf("after 11,the current thread's name is %s\n", thread_current()->name);main
+
+  msg ("Medium thread should just have finished.");//12
   msg ("Low thread should have priority %d.  Actual priority: %d.",
-       PRI_DEFAULT, thread_get_priority ());
+       PRI_DEFAULT, thread_get_priority ());//13
 }
 
 static void
 medium_thread_func (void *locks_)
 {
-  struct locks *locks = locks_;
+  struct locks *locks = locks_;//14
 
-  lock_acquire (locks->b);
-  lock_acquire (locks->a);
+  lock_acquire (locks->b);//15
+  lock_acquire (locks->a);//16
 
   msg ("Medium thread should have priority %d.  Actual priority: %d.",
-       PRI_DEFAULT + 2, thread_get_priority ());
-  msg ("Medium thread got the lock.");
+       PRI_DEFAULT + 2, thread_get_priority ());//16
+  msg ("Medium thread got the lock.");//17
 
-  lock_release (locks->a);
-  thread_yield ();
+  lock_release (locks->a);//18
+  thread_yield ();//19
 
-  lock_release (locks->b);
-  thread_yield ();
+  lock_release (locks->b);//20
+  thread_yield ();//21
 
-  msg ("High thread should have just finished.");
-  msg ("Middle thread finished.");
+  msg ("High thread should have just finished.");//22
+  msg ("Middle thread finished.");//23
 }
 
 static void
@@ -87,8 +93,8 @@ high_thread_func (void *lock_)
 {
   struct lock *lock = lock_;
 
-  lock_acquire (lock);
-  msg ("High thread got the lock.");
-  lock_release (lock);
-  msg ("High thread finished.");
+  lock_acquire (lock);//24
+  msg ("High thread got the lock.");//25
+  lock_release (lock);//26
+  msg ("High thread finished.");//27
 }
