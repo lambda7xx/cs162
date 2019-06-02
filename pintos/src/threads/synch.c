@@ -121,6 +121,11 @@ sema_up (struct semaphore *sema)
     thread_unblock (list_entry (list_pop_front (&sema->waiters),
                                 struct thread, elem));
   sema->value++;
+   if(thread_current()->priority != thread_current()->old_priority){
+        //如果问真，表示优先级发生变化，恢复优先级
+        thread_current()->priority = thread_current()->old_priority;
+}
+
   thread_yield();
   intr_set_level (old_level);
 }
@@ -237,10 +242,10 @@ lock_release (struct lock *lock)
   ASSERT (lock_held_by_current_thread (lock));
 
   lock->holder = NULL;
-  if(thread_current()->priority != thread_current()->old_priority){
+  /*if(thread_current()->priority != thread_current()->old_priority){
 	//如果问真，表示优先级发生变化，恢复优先级
 	thread_current()->priority = thread_current()->old_priority;
-}
+}*/
   sema_up (&lock->semaphore);
   //my code
   //thread_yield();//释放锁后。交出CPU，这时候各线程争夺CPU
