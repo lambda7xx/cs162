@@ -57,6 +57,9 @@ sema_init (struct semaphore *sema, unsigned value)
    interrupt handler.  This function may be called with
    interrupts disabled, but if it sleeps then the next scheduled
    thread will probably turn interrupts back on. */
+//sema_down是申请资源，sema->value必须大于等于1
+//如果sema->vakue = 0,必须把这个线程放入sema->waiters这个链表，
+//然后阻塞这个线程，调用thread_block
 void
 sema_down (struct semaphore *sema)
 {
@@ -66,14 +69,14 @@ sema_down (struct semaphore *sema)
   ASSERT (!intr_context ());
 
   old_level = intr_disable ();
-  while (sema->value == 0)
+  while (sema->value == 0)//9
     {  
       
       //list_push_back (&sema->waiters, &thread_current ()->elem);
       //my code
-       list_insert_ordered(&sema->waiters,&thread_current()->elem,(list_less_func *) &thread_cmp_priority,NULL);
+       list_insert_ordered(&sema->waiters,&thread_current()->elem,(list_less_func *) &thread_cmp_priority,NULL);//10
 
-      thread_block ();
+      thread_block ();//11
     }
   sema->value--;
   intr_set_level (old_level);
@@ -117,11 +120,11 @@ sema_up (struct semaphore *sema)
   ASSERT (sema != NULL);
 
   old_level = intr_disable ();
-  if (!list_empty (&sema->waiters))
+  if (!list_empty (&sema->waiters))//1
     thread_unblock (list_entry (list_pop_front (&sema->waiters),
-                                struct thread, elem));
-  sema->value++;
-  thread_yield();
+                                struct thread, elem));//2
+  sema->value++;//3
+  thread_yield();//4
   intr_set_level (old_level);
 }
 
