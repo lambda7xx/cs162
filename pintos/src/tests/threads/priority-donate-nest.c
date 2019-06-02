@@ -79,10 +79,13 @@ medium_thread_func (void *locks_)
   msg ("Medium thread got the lock.");//17
 
   lock_release (locks->a);//18
+//  printf("before 19,the current thread's name is %s\n", thread_current()->name)
   thread_yield ();//19
-
+ // printf("after 19,the current thread's name is %s\n", thread_current()->name)
   lock_release (locks->b);//20
+ // printf("before 21,the current thread's name is %s\n", thread_current()->name)
   thread_yield ();//21
+ // printf("after 21,the current thread's name is %s\n", thread_current()->name)
 
   msg ("High thread should have just finished.");//22
   msg ("Middle thread finished.");//23

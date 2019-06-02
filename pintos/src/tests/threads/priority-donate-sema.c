@@ -39,11 +39,11 @@ test_priority_donate_sema (void)
 
   lock_init (&ls.lock);
   sema_init (&ls.sema, 0);
-  thread_create ("low", PRI_DEFAULT + 1, l_thread_func, &ls);
-  thread_create ("med", PRI_DEFAULT + 3, m_thread_func, &ls);
-  thread_create ("high", PRI_DEFAULT + 5, h_thread_func, &ls);
-  sema_up (&ls.sema);
-  msg ("Main thread finished.");
+  thread_create ("low", PRI_DEFAULT + 1, l_thread_func, &ls);//1
+  thread_create ("med", PRI_DEFAULT + 3, m_thread_func, &ls);//2
+  thread_create ("high", PRI_DEFAULT + 5, h_thread_func, &ls);//3
+  sema_up (&ls.sema);//4
+  msg ("Main thread finished.");//5
 }
 
 static void
@@ -51,12 +51,12 @@ l_thread_func (void *ls_)
 {
   struct lock_and_sema *ls = ls_;
 
-  lock_acquire (&ls->lock);
-  msg ("Thread L acquired lock.");
-  sema_down (&ls->sema);
-  msg ("Thread L downed semaphore.");
-  lock_release (&ls->lock);
-  msg ("Thread L finished.");
+  lock_acquire (&ls->lock);//6
+  msg ("Thread L acquired lock.");//7
+  sema_down (&ls->sema);//8
+  msg ("Thread L downed semaphore.");//9
+  lock_release (&ls->lock);//10
+  msg ("Thread L finished.");//11
 }
 
 static void
@@ -64,8 +64,8 @@ m_thread_func (void *ls_)
 {
   struct lock_and_sema *ls = ls_;
 
-  sema_down (&ls->sema);
-  msg ("Thread M finished.");
+  sema_down (&ls->sema);//12
+  msg ("Thread M finished.");//13
 }
 
 static void
@@ -73,10 +73,10 @@ h_thread_func (void *ls_)
 {
   struct lock_and_sema *ls = ls_;
 
-  lock_acquire (&ls->lock);
-  msg ("Thread H acquired lock.");
+  lock_acquire (&ls->lock);//14
+  msg ("Thread H acquired lock.");//15
 
-  sema_up (&ls->sema);
-  lock_release (&ls->lock);
-  msg ("Thread H finished.");
+  sema_up (&ls->sema);//16
+  lock_release (&ls->lock);//17
+  msg ("Thread H finished.");//18
 }
