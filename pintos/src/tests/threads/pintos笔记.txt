@@ -2,4 +2,9 @@
  而在lock_realse()函数后，释放锁，这时候从sema->waiter这个链表中找到优先级最大的线程，获得CPU，然后现在只剩如何在lock_acquire后，如何让main的优先级提高
 	-20190601
 
-
+2 priority-donate_multiple:如何知道有几个锁，我的思路是
+				在struct thread里加入一个number_lock，在thread_create里初始化为0
+				然后lock_acuqire()里thread_current()->number_lock++;
+				在lock_realese里执行thread_current()->number_lock--;
+				核心操作:建立一个链表，用插入list_push_back的方式，比如说刚开始在
+				thread_create里这个链表里只有原来的prioriity，在priority-donate-mulitple程				序中，
