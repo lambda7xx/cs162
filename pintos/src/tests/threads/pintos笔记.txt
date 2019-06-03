@@ -13,3 +13,10 @@
    如何实现:在main没有获得锁的时候，thread_create创造线程a,完成线程a和main的切换，如果a的优先级x大于main的优先级y，我们让a得到cpu,并且把main的优先级变得跟a一样，即我们让main的优先级变大了,从x变成y，,而且a执行完毕后，我们让main的优先级从y重新变回x，
            如果main获得了锁，即执行了lock_acquire函数，在执行lock_release()函数之前，都是main获得cpu,如果thread_create函数创造了线程b，其优先级为z,如果z > y;y是main的优先级，则此时main的优先级从y变为z,main释放锁后，如果main还没有执行完毕，则将main悬挂，然后b获得CPU，b执行完毕后，main的线程重新有z变回y
 	  
+4.补充:pintos内核时抢占内核，当test文件执行thread_create的时候，如果thread_current()加了锁，则当前线程一直占据cpu,如果没加锁，当新创造的线程的优先级大于当前占据CPU的线程，新线程会
+ 把CPU抢过来，然后我们可以在struct thread 里加入 int num_lock;表示锁的数量，初始化为0
+ 另外，似乎在thread_set_priority函数中，也有判断锁的存在，如果有锁，只需要改变优先级，
+然后不需要执行thread_yield()函数放弃CPU，如果没锁，则调用thread_yield,在struct thread里加入int old_priority,表示最初的线程刚被创造的优先级，在thread_create函数中，old_priority初始化为thread_create的参数priority在释放锁后，thread_current()->priorirt 重新变为priority;
+
+
+5 单步调试priority-change:看什么时候运行kernel_thread()函数，理解其中的意思
