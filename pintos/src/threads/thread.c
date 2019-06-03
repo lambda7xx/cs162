@@ -180,29 +180,31 @@ thread_create (const char *name, int priority,
     return TID_ERROR;
 
   /* Initialize thread. */
-  init_thread (t, name, priority);
-  tid = t->tid = allocate_tid ();
+ // printf("current thread's name is %s\n", thread_current()->name);
+  init_thread (t, name, priority);//1
+  tid = t->tid = allocate_tid ();//2
 
   /* Stack frame for kernel_thread(). */
-  kf = alloc_frame (t, sizeof *kf);
-  kf->eip = NULL;
-  kf->function = function;
-  kf->aux = aux;
+  kf = alloc_frame (t, sizeof *kf);//3
+  kf->eip = NULL;//4
+  kf->function = function;//5
+  kf->aux = aux;//6
 
   /* Stack frame for switch_entry(). */
-  ef = alloc_frame (t, sizeof *ef);
-  ef->eip = (void (*) (void)) kernel_thread;
+  ef = alloc_frame (t, sizeof *ef);//7
+  ef->eip = (void (*) (void)) kernel_thread;//8
 
   /* Stack frame for switch_threads(). */
-  sf = alloc_frame (t, sizeof *sf);
-  sf->eip = switch_entry;
+  sf = alloc_frame (t, sizeof *sf);//9
+  sf->eip = switch_entry;//10
   sf->ebp = 0;
   t->block_ticks = 0;
   
   /* Add to run queue. */
-  thread_unblock (t);
+  thread_unblock (t);//11
+
  if(thread_current()->priority < t->priority)
-	thread_yield();
+	thread_yield();//12完成线程切换
   return tid;
 }
 
