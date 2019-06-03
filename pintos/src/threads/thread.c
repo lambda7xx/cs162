@@ -493,7 +493,7 @@ init_thread (struct thread *t, const char *name, int priority)
   //t->ticks = 0;
   old_level = intr_disable ();
     list_insert_ordered(&all_list,&t->allelem,(list_less_func *) &thread_cmp_priority,NULL);
-
+   //利用list_insert_ordered将新创造的线程加入all_list这个链表，其中all_list类型为struct list
 //  list_push_back (&all_list, &t->allelem);
   intr_set_level (old_level);
 }
