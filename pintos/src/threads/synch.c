@@ -124,6 +124,10 @@ sema_up (struct semaphore *sema)
     thread_unblock (list_entry (list_pop_front (&sema->waiters),
                                 struct thread, elem));//2
   sema->value++;//3
+  thread_current()->num_lock--;
+  thread_current()->priority = list_pop_front(&priority_list)->priority;
+  //if(thread_current()->num_lock == 0)//表示没有锁了
+ //	thread_current()->priority = thread_current()->old_priority;
   thread_yield();//4
   intr_set_level (old_level);
 }
@@ -206,6 +210,11 @@ lock_acquire (struct lock *lock)
 
   sema_down (&lock->semaphore);
   lock->holder = thread_current ();
+  //我的思路:一旦lock_acquire后，锁数+1
+  //如果执行了lock_acquire_release后，锁-1
+  //如果锁为0，恢复原来的优先级
+  //如果锁不为0，则执行thread_yield函数，争夺CPU
+  thread_current()->num_lock++;
 }
 
 /* Tries to acquires LOCK and returns true if successful or false

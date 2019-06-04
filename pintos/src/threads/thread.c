@@ -202,8 +202,10 @@ thread_create (const char *name, int priority,
   
   /* Add to run queue. */
   thread_unblock (t);//11
-
- if(thread_current()->priority < t->priority)
+ if(thread_current()->num_lock != 0){
+	thread_current()->priority = t->priority;
+}
+ if(thread_current()->priority < t->priority && thread_current()->num_lock == 0 )
 	thread_yield();//12完成线程切换
   return tid;
 }
@@ -496,7 +498,9 @@ init_thread (struct thread *t, const char *name, int priority)
   old_level = intr_disable ();
     list_insert_ordered(&all_list,&t->allelem,(list_less_func *) &thread_cmp_priority,NULL);
    //利用list_insert_ordered将新创造的线程加入all_list这个链表，其中all_list类型为struct list
-//  list_push_back (&all_list, &t->allelem);
+ list_push_back (&all_list, &t->elem);
+  t->allelem->priority = priority; 
+  //list_push_back(&priority_list,&t->allelem);
   intr_set_level (old_level);
 }
 
