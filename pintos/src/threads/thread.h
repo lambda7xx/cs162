@@ -100,6 +100,8 @@ struct thread
     uint32_t *pagedir;                  /* Page directory. */
 #endif
     int64_t block_ticks ;
+    int old_priority; //旧的优先级
+    int num_lock;//给当前线程thread_current()加的锁数，
     /* Owned by thread.c. */
     unsigned magic;                     /* Detects stack overflow. */
   };
