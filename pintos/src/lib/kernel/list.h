@@ -88,7 +88,8 @@
 
 /* List element. */
 struct list_elem
-  {
+  { 
+    //int priority;//优先级链表
     struct list_elem *prev;     /* Previous list element. */
     struct list_elem *next;     /* Next list element. */
   };
