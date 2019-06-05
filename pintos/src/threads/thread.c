@@ -360,9 +360,16 @@ void thread_block_ticks(struct thread *t,void * aux UNUSED )
 /* Sets the current thread's priority to NEW_PRIORITY. */
 void
 thread_set_priority (int new_priority)
-{
-  thread_current ()->priority = new_priority;
-  thread_yield();
+{ 
+  enum intr_level old_level;
+  old_level = intr_disable();
+  thread_current ()->old_priority = new_priority;
+  if(list_empty(&thread_current()->lock) || thread_current()->priority < new_priority){
+	thread_current()->priority = new_priority;
+	thread_yield();
+}
+  intr_set_level(old_level);
+ // thread_yield();
 }
 
 /* Returns the current thread's priority. */
