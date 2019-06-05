@@ -243,10 +243,12 @@ lock_release (struct lock *lock)
   ASSERT (lock_held_by_current_thread (lock));
 
   lock->holder = NULL;
-  sema_up (&lock->semaphore);
   if(list_empty(&thread_current()->locks))
-	//当前线程无锁
 	thread_current()->priority = thread_current()->old_priority;
+  sema_up (&lock->semaphore);
+  /*if(list_empty(&thread_current()->locks))
+	//当前线程无锁
+	thread_current()->priority = thread_current()->old_priority;*/
   //my code
   //thread_yield();//释放锁后。交出CPU，这时候各线程争夺CPU
 }
