@@ -320,6 +320,8 @@ bool cond_sema_cmp_priority (const struct list_elem *a, const struct list_elem *
    struct semaphore_elem *sb = list_entry (b, struct semaphore_elem, elem);
    return list_entry(list_front(&sa->semaphore.waiters), struct thread, elem)->priority > list_entry(list_front(&sb->semaphore.waiters), struct thread, elem)->priority;
  }
+bool lock_cmp_priority(const struct list_elem * a,const struct list_elem *b,void *aux UNUSED){
+	return list_entry(a,struct lock,elem)->max_priority > list_entry(b,struct lock,elem)->old_priority;
 
 /* If any threads are waiting on COND (protected by LOCK), then
    this function signals one of them to wake up from its wait.
