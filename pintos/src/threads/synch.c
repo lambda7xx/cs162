@@ -165,7 +165,7 @@ sema_test_helper (void *sema_)
       sema_down (&sema[0]);
       sema_up (&sema[1]);
     }
-}
+~:}
 
 /* Initializes LOCK.  A lock can be held by at most a single
    thread at any given time.  Our locks are not "recursive", that
@@ -188,6 +188,7 @@ lock_init (struct lock *lock)
   ASSERT (lock != NULL);
 
   lock->holder = NULL;
+  lock->max_priority =0;//初始化为0
   sema_init (&lock->semaphore, 1);
 }
 
@@ -205,7 +206,7 @@ lock_acquire (struct lock *lock)
   ASSERT (lock != NULL);
   ASSERT (!intr_context ());
   ASSERT (!lock_held_by_current_thread (lock));
-
+  
   sema_down (&lock->semaphore);
   lock->holder = thread_current ();
 }
