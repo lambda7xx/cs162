@@ -44,8 +44,8 @@ void cond_signal (struct condition *, struct lock *);
 void cond_broadcast (struct condition *, struct lock *);
 bool cond_sema_cmp_priority (const struct list_elem *a, const struct list_elem *b, void *aux);
 
-//bool cond_sema_cmp_priority(const struct list_elem * a, const struct list_elem * b, void * aux UNUSED);
-//bool cond_sema_cmp_priority(const struct list_elem * a, const struct list_elem * b, void * aux UNUSED);
+bool lock_cmp_priority(const struct list_elem * a, const struct list_elem * b, void * aux );
+
 /* Optimization barrier.
 
    The compiler will not reorder operations across an
