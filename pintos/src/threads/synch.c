@@ -75,8 +75,10 @@ sema_down (struct semaphore *sema)
       //list_push_back (&sema->waiters, &thread_current ()->elem);
       //my code
        list_insert_ordered(&sema->waiters,&thread_current()->elem,(list_less_func *) &thread_cmp_priority,NULL);//10
-i
+
       thread_block ();//11
+   //如果sema->vlaue 为0.将其插入sema->waiters,然后调用thread_block(),使thread_current()睡眠。然后完成调度
+   //和线程切换
     }
   sema->value--;
   intr_set_level (old_level);
