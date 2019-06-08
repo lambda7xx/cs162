@@ -31,7 +31,7 @@
 #include <string.h>
 #include "threads/interrupt.h"
 #include "threads/thread.h"
-
+#include <list.h>
 /* Initializes semaphore SEMA to VALUE.  A semaphore is a
    nonnegative integer along with two atomic operators for
    manipulating it:
@@ -207,16 +207,31 @@ lock_acquire (struct lock *lock)
   ASSERT (!intr_context ());
   ASSERT (!lock_held_by_current_thread (lock));
   struct thread * cur  = thread_current();
+  struct lock * tl = lock;//暂存锁
   if(cur->priority > lock->max_priority){
 		lock->max_priority = cur->priority;
 }
   if(lock->holder == NULL) //表示这个锁没有线程获得
 	{
-	list_insert_ordered(&cur->locks,&lock->elem, (list_less_function *)&lock_cmp_priority,NULL);
+ 
+ list_insert_ordered(&cur->locks,&lock->elem, (list_less_func *)&lock_cmp_priority,NULL);
+	//把这个lock插入当前线程的locks的list中
 }
  else{
-  cur->lock_waiting = lock;
-}
+ 	 cur->waiting_threads = lock;//当前线程的等待锁为lock
+         struct thread * newt;
+  	 while(tl)
+	{
+	 newt = tl->holder;//持有这个锁的现场
+	 //在priority-donate-chain中，cur = 7;cur->priority = 21
+	//lock7 ->max_priority = 21,然后需要lock6,lock6->max_priority = 18;
+       //所以我把cur->priority 给lock6->holder
+       if(cur->priority > newt->priority)
+		newt->priority = cur->priority;
+         tl = newt->waiting_threads;//
+	}
+	}        
+
   sema_down (&lock->semaphore);
   lock->holder = thread_current ();
 }
@@ -253,8 +268,19 @@ lock_release (struct lock *lock)
   ASSERT (lock_held_by_current_thread (lock));
 
   lock->holder = NULL;
-  if(list_empty(&thread_current()->locks))
+  struct thread * cur = thread_current();
+ list_remove(&lock->elem);//在当前线程的list中移除该锁
+  if(list_empty(&thread_current()->locks)) //线程不拥有锁了，则恢复原来的优先级
 	thread_current()->priority = thread_current()->old_priority;
+  else{
+	//还有锁
+     list_sort(&cur->locks,(list_less_func *)&lock_cmp_priority,NULL);//排序
+     int temp_priority = list_entry(list_front(&cur->locks),struct lock,elem)->max_priority;
+     if(temp_priority < lock->max_priority){
+		cur->priority = temp_priority;;//当前线程的锁的最大优先级小于lock的最大优先级，什么也不用做
+ 	
+    }
+}
   sema_up (&lock->semaphore);
   /*if(list_empty(&thread_current()->locks))
 	//当前线程无锁
