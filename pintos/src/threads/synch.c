@@ -206,7 +206,17 @@ lock_acquire (struct lock *lock)
   ASSERT (lock != NULL);
   ASSERT (!intr_context ());
   ASSERT (!lock_held_by_current_thread (lock));
-  
+  struct thread * cur  = thread_current();
+  if(cur->priority > lock->max_priority){
+		lock->max_priority = cur->priority;
+}
+  if(lock->holder == NULL) //表示这个锁没有线程获得
+	{
+	list_insert_ordered(&cur->locks,&lock->elem, (list_less_function *)&lock_cmp_priority,NULL);
+}
+ else{
+  cur->lock_waiting = lock;
+}
   sema_down (&lock->semaphore);
   lock->holder = thread_current ();
 }
@@ -249,8 +259,6 @@ lock_release (struct lock *lock)
   /*if(list_empty(&thread_current()->locks))
 	//当前线程无锁
 	thread_current()->priority = thread_current()->old_priority;*/
-  //my code
-  //thread_yield();//释放锁后。交出CPU，这时候各线程争夺CPU
 }
 
 /* Returns true if the current thread holds LOCK, false
@@ -324,9 +332,11 @@ bool cond_sema_cmp_priority (const struct list_elem *a, const struct list_elem *
    struct semaphore_elem *sa = list_entry (a, struct semaphore_elem, elem);
    struct semaphore_elem *sb = list_entry (b, struct semaphore_elem, elem);
    return list_entry(list_front(&sa->semaphore.waiters), struct thread, elem)->priority > list_entry(list_front(&sb->semaphore.waiters), struct thread, elem)->priority;
- }
+}
+
+
 bool lock_cmp_priority(const struct list_elem * a,const struct list_elem *b,void *aux UNUSED){
-	return list_entry(a,struct lock,elem)->max_priority > list_entry(b,struct lock,elem)->max_priority;
+  return list_entry(a,struct lock,elem)->max_priority > list_entry(b,struct lock,elem)->max_priority;
 }
 /* If any threads are waiting on COND (protected by LOCK), then
    this function signals one of them to wake up from its wait.
