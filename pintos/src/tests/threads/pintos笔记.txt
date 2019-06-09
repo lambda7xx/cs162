@@ -8,6 +8,7 @@
 				在lock_realese里执行thread_current()->number_lock--;
 				核心操作:建立一个链表，用插入list_push_back的方式，比如说刚开始在
 				thread_create里这个链表里只有原来的prioriity，在priority-donate-mulitple程				序中，
+<<<<<<< HEAD
 3 第2无效,分析priority-donate-multiple,priority-donate-multiple2,priority-donate-nest.c等:thread_create中的参数aux可以为任何类型，不单单为struct lock 类型
 	  第三，当main线程没有获得锁的时候，需要在thread_create中实现线程调度功能，但怎么实现，要仔细思考
    如何实现:在main没有获得锁的时候，thread_create创造线程a,完成线程a和main的切换，如果a的优先级x大于main的优先级y，我们让a得到cpu,并且把main的优先级变得跟a一样，即我们让main的优先级变大了,从x变成y，,而且a执行完毕后，我们让main的优先级从y重新变回x，
@@ -20,3 +21,5 @@
 
 
 5 单步调试priority-change:看什么时候运行kernel_thread()函数，理解其中的意思
+=======
+>>>>>>> 31e02a0f97f819a069cce2468898679db08c8191

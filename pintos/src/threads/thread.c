@@ -53,7 +53,7 @@ static long long user_ticks;    /* # of timer ticks in user programs. */
 /* Scheduling. */
 #define TIME_SLICE 4            /* # of timer ticks to give each thread. */
 static unsigned thread_ticks;   /* # of timer ticks since last yield. */
-
+static bool locked;
 /* If false (default), use round-robin scheduler.
    iIf true, use multi-level feedback queue scheduler.
    Controlled by kernel command-line option "-o mlfqs". */
@@ -201,10 +201,31 @@ thread_create (const char *name, int priority,
   sf->eip = switch_entry;//10
   sf->ebp = 0;
   t->block_ticks = 0;
+<<<<<<< HEAD
 //   printf("10 the thread_current() 's name  is %s and its priority is  %d,the t's name is %s and its priority is %d\n", thread_current()->name,thread_current()->priority,t->name,t->priority);
 
   /* Add to run queue. */
   thread_unblock (t);//11
+=======
+  locked = false;
+  
+ 
+ if(aux != NULL){
+        locked = lock_held_by_current_thread((struct lock *)(aux));
+        if(locked){
+                int old_priority = thread_current()->priority;
+                thread_current()->old_priority = old_priority;
+                thread_current()->priority = t->priority;
+                locked = false;
+        }
+}
+  /* Add to run queue. */
+ /*if(thread_current()->locked)
+	thread_set_priority(priority);*/
+ // 	printf("is_locked %d\n",lock_held_by_current_thread((struct lock *)(aux)));
+  thread_unblock (t);
+
+>>>>>>> 31e02a0f97f819a069cce2468898679db08c8191
  if(thread_current()->priority < t->priority)
 	thread_yield();//12完成线程切换
   //printf("12 the thread_current()'s name is %s and its priority is %d\n",thread_current()->name,thread_current()->priority);
@@ -364,6 +385,7 @@ void thread_block_ticks(struct thread *t,void * aux UNUSED )
 void
 thread_set_priority (int new_priority)
 { 
+<<<<<<< HEAD
   enum intr_level old_level;
   old_level = intr_disable();
   thread_current ()->old_priority = new_priority;
@@ -373,6 +395,10 @@ thread_set_priority (int new_priority)
 }
   intr_set_level(old_level);
  // thread_yield();
+=======
+  thread_current ()->priority = new_priority;
+  thread_yield();
+>>>>>>> 31e02a0f97f819a069cce2468898679db08c8191
 }
 
 /* Returns the current thread's priority. */
@@ -500,6 +526,7 @@ init_thread (struct thread *t, const char *name, int priority)
   t->stack = (uint8_t *) t + PGSIZE;
   t->priority = priority;
   t->magic = THREAD_MAGIC;
+  t->old_priority = priority;
   //t->ticks = 0;
   list_init(&t->locks);
   t->waiting_threads = NULL;

@@ -100,10 +100,14 @@ struct thread
     uint32_t *pagedir;                  /* Page directory. */
 #endif
     int64_t block_ticks ;
+<<<<<<< HEAD
     int old_priority; //旧的优先级
     struct list locks;//线程拥有的锁的数量
     struct lock *waiting_threads;//当前多少线程在等待这个锁
     int num_lock;//给当前线程thread_current()加的锁数，
+=======
+    int old_priority;
+>>>>>>> 31e02a0f97f819a069cce2468898679db08c8191
     /* Owned by thread.c. */
     unsigned magic;                     /* Detects stack overflow. */
   };

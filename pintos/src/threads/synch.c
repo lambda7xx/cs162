@@ -124,9 +124,20 @@ sema_up (struct semaphore *sema)
   old_level = intr_disable ();
   if (!list_empty (&sema->waiters))//1
     thread_unblock (list_entry (list_pop_front (&sema->waiters),
+<<<<<<< HEAD
                                 struct thread, elem));//2
   sema->value++;//3
   thread_yield();//4
+=======
+                                struct thread, elem));
+  sema->value++;
+   if(thread_current()->priority != thread_current()->old_priority){
+        //如果问真，表示优先级发生变化，恢复优先级
+        thread_current()->priority = thread_current()->old_priority;
+}
+
+  thread_yield();
+>>>>>>> 31e02a0f97f819a069cce2468898679db08c8191
   intr_set_level (old_level);
 }
 
@@ -271,6 +282,7 @@ lock_release (struct lock *lock)
   ASSERT (lock_held_by_current_thread (lock));
 
   lock->holder = NULL;
+<<<<<<< HEAD
   struct thread * cur = thread_current();
 //  if(thread_current()->locks != NULL)
   	list_remove(&lock->elem);//在当前线程的list中移除该锁
@@ -285,6 +297,12 @@ lock_release (struct lock *lock)
  	
     }
 }
+=======
+  /*if(thread_current()->priority != thread_current()->old_priority){
+	//如果问真，表示优先级发生变化，恢复优先级
+	thread_current()->priority = thread_current()->old_priority;
+}*/
+>>>>>>> 31e02a0f97f819a069cce2468898679db08c8191
   sema_up (&lock->semaphore);
   /*if(list_empty(&thread_current()->locks))
 	//当前线程无锁
