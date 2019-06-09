@@ -202,9 +202,10 @@ thread_create (const char *name, int priority,
   
   /* Add to run queue. */
   thread_unblock (t);//11
-
+ printf("11 the thread_current() 's name  is %s and its priority is  %d,the t's name is %s and its priority is %d\n", thread_current()->name,thread_current()->priority,t->name,t->priority);
  if(thread_current()->priority < t->priority)
 	thread_yield();//12完成线程切换
+  //printf("12 the thread_current()'s name is %s and its priority is %d\n",thread_current()->name,thread_current()->priority);
   return tid;
 }
 

@@ -213,22 +213,22 @@ lock_acquire (struct lock *lock)
 }
   if(lock->holder == NULL) //表示这个锁没有线程获得
 	{
- 
- list_insert_ordered(&cur->locks,&lock->elem, (list_less_func *)&lock_cmp_priority,NULL);
+    //有可能有多个锁
+    list_insert_ordered(&thread_current()->locks,&lock->elem, (list_less_func *)&lock_cmp_priority,NULL);
+    thread_current()->priority =  list_entry(list_front(&thread_current()->locks),struct lock, elem)->max_priority;
 	//把这个lock插入当前线程的locks的list中
 }
  else{
  	 cur->waiting_threads = lock;//当前线程的等待锁为lock
-         struct thread * newt;
+         //struct thread * newt;
   	 while(tl)
 	{
-	 newt = tl->holder;//持有这个锁的现场
 	 //在priority-donate-chain中，cur = 7;cur->priority = 21
 	//lock7 ->max_priority = 21,然后需要lock6,lock6->max_priority = 18;
        //所以我把cur->priority 给lock6->holder
-       if(cur->priority > newt->priority)
-		newt->priority = cur->priority;
-         tl = newt->waiting_threads;//
+         if(cur->priority > tl->holder->priority)
+		tl->holder->priority = cur->priority;
+         tl = tl->holder->waiting_threads;//
 	}
 	}        
 
@@ -269,7 +269,7 @@ lock_release (struct lock *lock)
 
   lock->holder = NULL;
   struct thread * cur = thread_current();
- list_remove(&lock->elem);//在当前线程的list中移除该锁
+  list_remove(&lock->elem);//在当前线程的list中移除该锁
   if(list_empty(&thread_current()->locks)) //线程不拥有锁了，则恢复原来的优先级
 	thread_current()->priority = thread_current()->old_priority;
   else{
