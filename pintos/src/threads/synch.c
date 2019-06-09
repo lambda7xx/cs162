@@ -207,35 +207,44 @@ lock_acquire (struct lock *lock)
   ASSERT (!intr_context ());
   ASSERT (!lock_held_by_current_thread (lock));
   struct thread * cur  = thread_current();
-  struct lock * tl = lock;//暂存锁
-  if(cur->priority > lock->max_priority){
-		lock->max_priority = cur->priority;
-}
-  if(lock->holder == NULL) //表示这个锁没有线程获得
-	{
-    //有可能有多个锁
-    list_insert_ordered(&thread_current()->locks,&lock->elem, (list_less_func *)&lock_cmp_priority,NULL);
-    thread_current()->priority =  list_entry(list_front(&thread_current()->locks),struct lock, elem)->max_priority;
-	//把这个lock插入当前线程的locks的list中
-}
- else{
+  struct lock * tl ;//暂存锁
+  /*if(thread_current()->priority > lock->max_priority && lock->holder ==NULL  ){
+		lock->max_priority = thread_current()->priority;
+}*/
+ if(lock->holder != NULL && !thread_mlfqs){
  	 cur->waiting_threads = lock;//当前线程的等待锁为lock
-         //struct thread * newt;
-  	 while(tl)
+  	 tl = lock;
+  	 while(tl && cur->priority > tl->max_priority)
 	{
+		tl->max_priority = thread_current()->priority;
+		thread_donate_priority(tl->holder);
 	 //在priority-donate-chain中，cur = 7;cur->priority = 21
 	//lock7 ->max_priority = 21,然后需要lock6,lock6->max_priority = 18;
        //所以我把cur->priority 给lock6->holder
-         if(cur->priority > tl->holder->priority)
-		tl->holder->priority = cur->priority;
          tl = tl->holder->waiting_threads;//
 	}
-	}        
-
+}        
   sema_down (&lock->semaphore);
-  lock->holder = thread_current ();
+  if(!thread_mlfqs)
+{
+	thread_current()->waiting_threads = NULL;
+	thread_hold_the_lock(lock);
 }
-
+  lock->holder = thread_current ();
+  
+}
+void thread_hold_the_lock(struct lock * lock)
+{
+	enum intr_level old_level = intr_disable();
+	list_insert_ordered(&thread_current()->locks,&lock->elem,lock_cmp_priority,NULL);
+//int t_max_priority = list_entry(list_front(&thread_current()->locks),struct lock,elem)->max_priority;
+	if(lock->max_priority > thread_current()->priority)
+		{
+	thread_current()->priority = lock->max_priority;
+	thread_yield();
+}
+	intr_set_level(old_level);
+}
 /* Tries to acquires LOCK and returns true if successful or false
    on failure.  The lock must not already be held by the current
    thread.

@@ -193,16 +193,18 @@ thread_create (const char *name, int priority,
   /* Stack frame for switch_entry(). */
   ef = alloc_frame (t, sizeof *ef);//7
   ef->eip = (void (*) (void)) kernel_thread;//8
+   //printf("8 the thread_current() 's name  is %s and its priority is  %d,the t's name is %s and its priority is %d\n", thread_current()->name,thread_current()->priority,t->name,t->priority);
+
 
   /* Stack frame for switch_threads(). */
   sf = alloc_frame (t, sizeof *sf);//9
   sf->eip = switch_entry;//10
   sf->ebp = 0;
   t->block_ticks = 0;
-  
+//   printf("10 the thread_current() 's name  is %s and its priority is  %d,the t's name is %s and its priority is %d\n", thread_current()->name,thread_current()->priority,t->name,t->priority);
+
   /* Add to run queue. */
   thread_unblock (t);//11
- printf("11 the thread_current() 's name  is %s and its priority is  %d,the t's name is %s and its priority is %d\n", thread_current()->name,thread_current()->priority,t->name,t->priority);
  if(thread_current()->priority < t->priority)
 	thread_yield();//12完成线程切换
   //printf("12 the thread_current()'s name is %s and its priority is %d\n",thread_current()->name,thread_current()->priority);
@@ -619,6 +621,38 @@ allocate_tid (void)
 
   return tid;
 }
+
+void thread_donate_priority(struct thread *t )
+{
+	enum intr_level old_level = intr_disable();
+	thread_update_priority(t);
+	if(t->status == THREAD_READY)
+	{
+	list_remove(&t->elem);
+	list_insert_ordered(&ready_list,&t->elem,thread_cmp_priority,NULL);
+}
+	intr_set_level(old_level);
+}
+
+ /* Update priority. */
+  void
+  thread_update_priority (struct thread *t)
+  {
+    enum intr_level old_level = intr_disable ();
+   int max_priority = t->old_priority;
+    int lock_priority;
+ 
+    if (!list_empty (&t->locks))
+   {
+     list_sort (&t->locks, lock_cmp_priority, NULL);
+     lock_priority = list_entry (list_front (&t->locks), struct lock, elem)->max_priority;
+     if (lock_priority > max_priority)
+       max_priority = lock_priority;
+   }
+ 
+   t->priority = max_priority;
+   intr_set_level (old_level);
+ }
 
 /* Offset of `stack' member within `struct thread'.
    Used by switch.S, which can't figure it out on its own. */

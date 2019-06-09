@@ -46,6 +46,8 @@ bool cond_sema_cmp_priority (const struct list_elem *a, const struct list_elem *
 
 bool lock_cmp_priority(const struct list_elem * a, const struct list_elem * b, void * aux );
 
+
+void thread_hold_the_lock(struct lock * );
 /* Optimization barrier.
 
    The compiler will not reorder operations across an
