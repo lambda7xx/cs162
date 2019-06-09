@@ -622,37 +622,25 @@ allocate_tid (void)
   return tid;
 }
 
-void thread_donate_priority(struct thread *t )
+void thread_update_priority(struct thread * t)
 {
 	enum intr_level old_level = intr_disable();
-	thread_update_priority(t);
-	if(t->status == THREAD_READY)
+	int old_priority = t->old_priority;
+	int max_priority;
+	if(!list_empty(&t->locks))//依然有锁
 	{
-	list_remove(&t->elem);
-	list_insert_ordered(&ready_list,&t->elem,thread_cmp_priority,NULL);
+	list_sort(&t->locks,lock_cmp_priority,NULL);//给t的锁按优先级排列
+	max_priority = list_entry(list_front(&t->locks),struct lock,elem)->max_priority;
+	if(max_priority > t->priority)
+		t->priority = max_priority;
+	}
+	else
+	{
+	t->priority = old_priority;
 }
+	
 	intr_set_level(old_level);
 }
-
- /* Update priority. */
-  void
-  thread_update_priority (struct thread *t)
-  {
-    enum intr_level old_level = intr_disable ();
-   int max_priority = t->old_priority;
-    int lock_priority;
- 
-    if (!list_empty (&t->locks))
-   {
-     list_sort (&t->locks, lock_cmp_priority, NULL);
-     lock_priority = list_entry (list_front (&t->locks), struct lock, elem)->max_priority;
-     if (lock_priority > max_priority)
-       max_priority = lock_priority;
-   }
- 
-   t->priority = max_priority;
-   intr_set_level (old_level);
- }
 
 /* Offset of `stack' member within `struct thread'.
    Used by switch.S, which can't figure it out on its own. */

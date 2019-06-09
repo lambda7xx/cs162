@@ -206,44 +206,38 @@ lock_acquire (struct lock *lock)
   ASSERT (lock != NULL);
   ASSERT (!intr_context ());
   ASSERT (!lock_held_by_current_thread (lock));
-  struct thread * cur  = thread_current();
-  struct lock * tl ;//暂存锁
-  /*if(thread_current()->priority > lock->max_priority && lock->holder ==NULL  ){
-		lock->max_priority = thread_current()->priority;
-}*/
- if(lock->holder != NULL && !thread_mlfqs){
- 	 cur->waiting_threads = lock;//当前线程的等待锁为lock
-  	 tl = lock;
-  	 while(tl && cur->priority > tl->max_priority)
+ 
+ //int priority = thread_current()->priority;
+ if(lock->holder != NULL && !thread_mlfqs)//线1想要锁0，但锁0在main手里，所以main优先级要变
 	{
-		tl->max_priority = thread_current()->priority;
-		thread_donate_priority(tl->holder);
-	 //在priority-donate-chain中，cur = 7;cur->priority = 21
-	//lock7 ->max_priority = 21,然后需要lock6,lock6->max_priority = 18;
-       //所以我把cur->priority 给lock6->holder
-         tl = tl->holder->waiting_threads;//
+	struct lock *temp_lock;
+	thread_current()->waiting_threads = lock;
+	temp_lock = lock;
+	while(temp_lock && thread_current()->priority > temp_lock->max_priority )
+	{    
+	    temp_lock->max_priority = thread_current()->priority;
+            thread_update_priority(temp_lock->holder);	
+	    temp_lock = temp_lock->holder->waiting_threads;
 	}
-}        
+}
   sema_down (&lock->semaphore);
-  if(!thread_mlfqs)
-{
-	thread_current()->waiting_threads = NULL;
-	thread_hold_the_lock(lock);
+ if(!thread_mlfqs)//表示该锁没有被拿到
+  	{
+        lock->max_priority = thread_current()->priority;	
+	thread_hold_lock(lock);
 }
-  lock->holder = thread_current ();
-  
+  lock->holder = thread_current();
 }
-void thread_hold_the_lock(struct lock * lock)
+void thread_hold_lock(struct lock * lock)
 {
 	enum intr_level old_level = intr_disable();
-	list_insert_ordered(&thread_current()->locks,&lock->elem,lock_cmp_priority,NULL);
-//int t_max_priority = list_entry(list_front(&thread_current()->locks),struct lock,elem)->max_priority;
-	if(lock->max_priority > thread_current()->priority)
-		{
-	thread_current()->priority = lock->max_priority;
-	thread_yield();
-}
+	list_insert_ordered(&thread_current()->locks,&lock->elem,lock_cmp_priority, NULL);//插入
+
+        int max_priority = list_entry(list_front(&thread_current()->locks),struct lock, elem)->max_priority;
+        if(thread_current()->priority < max_priority)//更新优先级
+                thread_current()->priority = max_priority;
 	intr_set_level(old_level);
+
 }
 /* Tries to acquires LOCK and returns true if successful or false
    on failure.  The lock must not already be held by the current
@@ -278,7 +272,8 @@ lock_release (struct lock *lock)
 
   lock->holder = NULL;
   struct thread * cur = thread_current();
-  list_remove(&lock->elem);//在当前线程的list中移除该锁
+//  if(thread_current()->locks != NULL)
+  	list_remove(&lock->elem);//在当前线程的list中移除该锁
   if(list_empty(&thread_current()->locks)) //线程不拥有锁了，则恢复原来的优先级
 	thread_current()->priority = thread_current()->old_priority;
   else{

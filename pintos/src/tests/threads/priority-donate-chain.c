@@ -56,30 +56,30 @@ test_priority_donate_chain (void)
   for (i = 0; i < NESTING_DEPTH - 1; i++)
     lock_init (&locks[i]);
 
-  lock_acquire (&locks[0]);
-  msg ("%s got lock.", thread_name ());
+  lock_acquire (&locks[0]);//1
+  msg ("%s got lock.", thread_name ());//2
 
   for (i = 1; i < NESTING_DEPTH; i++)
     {
       char name[16];
       int thread_priority;
 
-      snprintf (name, sizeof name, "thread %d", i);
+      snprintf (name, sizeof name, "thread %d", i);//3
       thread_priority = PRI_MIN + i * 3;
-      lock_pairs[i].first = i < NESTING_DEPTH - 1 ? locks + i: NULL;
-      lock_pairs[i].second = locks + i - 1;
+      lock_pairs[i].first = i < NESTING_DEPTH - 1 ? locks + i: NULL;//4
+      lock_pairs[i].second = locks + i - 1;//5
 
-      thread_create (name, thread_priority, donor_thread_func, lock_pairs + i);
+      thread_create (name, thread_priority, donor_thread_func, lock_pairs + i);//6
       msg ("%s should have priority %d.  Actual priority: %d.",
-          thread_name (), thread_priority, thread_get_priority ());
-
-      snprintf (name, sizeof name, "interloper %d", i);
-      thread_create (name, thread_priority - 1, interloper_thread_func, NULL);
+          thread_name (), thread_priority, thread_get_priority ());//7
+      //msg("%s 's priority is %d.", thread_name(), thread_current()->priority);
+      snprintf (name, sizeof name, "interloper %d", i);//8
+      thread_create (name, thread_priority - 1, interloper_thread_func, NULL);//9
     }
 
-  lock_release (&locks[0]);
+  lock_release (&locks[0]);//10
   msg ("%s finishing with priority %d.", thread_name (),
-                                         thread_get_priority ());
+                                         thread_get_priority ());//1
 }
 
 static void
@@ -87,28 +87,28 @@ donor_thread_func (void *locks_)
 {
   struct lock_pair *locks = locks_;
 
-  if (locks->first)
-    lock_acquire (locks->first);
+  if (locks->first)//12
+    lock_acquire (locks->first);//13
 
-  lock_acquire (locks->second);
-  msg ("%s got lock", thread_name ());
+  lock_acquire (locks->second);//14
+  msg ("%s got lock", thread_name ());//15
 
-  lock_release (locks->second);
+  lock_release (locks->second);//16
   msg ("%s should have priority %d. Actual priority: %d",
         thread_name (), (NESTING_DEPTH - 1) * 3,
-        thread_get_priority ());
+        thread_get_priority ());//17
 
   if (locks->first)
-    lock_release (locks->first);
+    lock_release (locks->first);//18
 
   msg ("%s finishing with priority %d.", thread_name (),
-                                         thread_get_priority ());
+                                         thread_get_priority ());//19
 }
 
 static void
 interloper_thread_func (void *arg_ UNUSED)
 {
-  msg ("%s finished.", thread_name ());
+  msg ("%s finished.", thread_name ());//20
 }
 
 // vim: sw=2
