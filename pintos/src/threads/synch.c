@@ -272,7 +272,7 @@ lock_release (struct lock *lock)
 
   lock->holder = NULL;
   struct thread * cur = thread_current();
-//  if(thread_current()->locks != NULL)
+  if(!list_empty(&thread_current()->locks))
   	list_remove(&lock->elem);//在当前线程的list中移除该锁
   if(list_empty(&thread_current()->locks)) //线程不拥有锁了，则恢复原来的优先级
 	thread_current()->priority = thread_current()->old_priority;

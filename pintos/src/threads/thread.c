@@ -11,6 +11,7 @@
 #include "threads/switch.h"
 #include "threads/synch.h"
 #include "threads/vaddr.h"
+#include "devices/timer.h"
 #ifdef USERPROG
 #include "userprog/process.h"
 #endif
@@ -70,7 +71,7 @@ static void *alloc_frame (struct thread *, size_t size);
 static void schedule (void);
 void thread_schedule_tail (struct thread *prev);
 static tid_t allocate_tid (void);
-
+static fixed_point_t load_avg;
 /* Initializes the threading system by transforming the code
    that's currently running into a thread.  This can't work in
    general and it is possible in this case only because loader.S
@@ -98,6 +99,7 @@ thread_init (void)
   init_thread (initial_thread, "main", PRI_DEFAULT);
   initial_thread->status = THREAD_RUNNING;
   initial_thread->tid = allocate_tid ();
+  load_avg = fix_int(0);//system boot
 }
 
 /* Starts preemptive thread scheduling by enabling interrupts.
@@ -402,7 +404,29 @@ int
 thread_get_load_avg (void)
 {
   /* Not yet implemented. */
-  return 0;
+  int ready_threads = 0;
+  if(thread_current() == idle_thread)
+	ready_threads = 0;
+  else
+	ready_threads = list_size(&ready_list) + 1;
+  int i = 0;
+  int result = load_avg.f;
+  if(timer_ticks() % 100 == 0){
+  i++;
+  
+  fixed_point_t p1 = fix_div(fix_int(59),fix_int(60));	//59/60
+  fixed_point_t p2 = fix_inv(fix_int(60));//1/60
+  printf("p2 is %d\n",p2.f); 
+  fixed_point_t temp1 = fix_mul(p1,load_avg);
+  printf("temp1 is %d\n",temp1.f);
+  fixed_point_t temp2 = fix_scale(p2,ready_threads);
+   printf("temp2 is %d\n",temp2.f);
+  load_avg = fix_add(temp1,temp2);
+  printf("the load_avg is %d and the ready_threads is %d\n", load_avg.f, ready_threads); 
+   result = fix_round(fix_scale(load_avg,100));
+   printf("the result is %d\n", result);
+}
+ return result;
 }
 
 /* Returns 100 times the current thread's recent_cpu value. */
