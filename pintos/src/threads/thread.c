@@ -205,13 +205,10 @@ thread_create (const char *name, int priority,
   sf->eip = switch_entry;//10
   sf->ebp = 0;
   t->block_ticks = 0;
-//   printf("10 the thread_current() 's name  is %s and its priority is  %d,the t's name is %s and its priority is %d\n", thread_current()->name,thread_current()->priority,t->name,t->priority);
-
   /* Add to run queue. */
   thread_unblock (t);//11
  if(thread_current()->priority < t->priority)
 	thread_yield();//12完成线程切换
-  //printf("12 the thread_current()'s name is %s and its priority is %d\n",thread_current()->name,thread_current()->priority);
   return tid;
 }
 
@@ -524,6 +521,11 @@ init_thread (struct thread *t, const char *name, int priority)
   strlcpy (t->name, name, sizeof t->name);
   t->stack = (uint8_t *) t + PGSIZE;
   t->priority = priority;
+  if(thread_mlfqs){ 
+  /*define MLFQ */
+   t->priority =  fix_trun(fix_sub(fix_sub(fix_int(PRI_MAX),fix_unscale(recent_cpu,4)),fix_int(nice * 2)));
+
+}
   t->magic = THREAD_MAGIC;
   //t->ticks = 0;
   list_init(&t->locks);
