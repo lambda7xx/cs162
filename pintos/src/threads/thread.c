@@ -387,6 +387,9 @@ void
 thread_set_nice (int nice UNUSED)
 {
   /* Not yet implemented. */
+   thread_current()->nice = nice;
+   thread_current()->priority = fix_trun(fix_sub(fix_sub(fix_int(PRI_MAX),fix_unscale(recent_cpu,4)),fix_int(nice * 2)));
+  thread_yield();
 }
 
 /* Returns the current thread's nice value. */
@@ -394,7 +397,7 @@ int
 thread_get_nice (void)
 {
   /* Not yet implemented. */
-  return 0;
+  return thread_current()->nice;;
 }
 
 /* Returns 100 times the system load average. */
@@ -526,7 +529,7 @@ init_thread (struct thread *t, const char *name, int priority)
   list_init(&t->locks);
   t->waiting_threads = NULL;
   t->num_lock = 0;
-  t->nice = fix_int(0);
+  t->nice = 0;
   
   t->old_priority = priority;
   old_level = intr_disable ();

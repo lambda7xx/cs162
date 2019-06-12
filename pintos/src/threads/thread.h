@@ -105,7 +105,7 @@ struct thread
     struct lock *waiting_threads;//当前多少线程在等待这个锁
     int num_lock;//给当前线程thread_current()加的锁数，
     /* Owned by thread.c. */
-   fixed_point_t nice;
+    int  nice;
     unsigned magic;                     /* Detects stack overflow. */
   };
 
