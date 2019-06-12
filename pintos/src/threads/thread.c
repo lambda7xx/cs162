@@ -393,31 +393,21 @@ int
 thread_get_load_avg (void)
 { 
  
- /*return fix_round(fix_scale(load_avg,100));*/
+ //return fix_round(fix_scale(load_avg,100));
   return fix_trunc(fix_scale(load_avg,100));
 }
 void thread_update_load_avg(){
    ASSERT(thread_mlfqs);
+   
    int ready_threads = list_size(&ready_list);
    if(thread_current() == idle_thread)
 	ready_threads = ready_threads;
    else
 	ready_threads = ready_threads + 1;
-    //load_avg = fix_add(fix_mul(fix_frac(59,60),load_avg),fix_unscale(fix_int(ready_threads),60));
-   load_avg =  fix_add(fix_unscale(fix_scale(load_avg, 59), 60), fix_unscale(fix_int(ready_threads), 60));
+   load_avg = fix_add(fix_mul(fix_frac(59,60),load_avg),fix_unscale(fix_int(ready_threads),60));
+ // load_avg =  fix_add(fix_unscale(fix_scale(load_avg, 59), 60), fix_unscale(fix_int(ready_threads), 60));
 }
-/*int num_ready_threads()
-{
-  struct list_elem * e;
-  size_t ready_threads = 0;
-  for(e = list_begin(&all_list); e != list_end(&all_list);e = list_next(e))
-{	
-  struct thread * temp = list_entry(e,struct thread,allelem);
-  if(temp->name != idle_thread && (temp->status == THREAD_RUNNING || temp->status == THREAD_READY))
-	ready_threads++;
-} 
-  return ready_threads;
-}*/
+
 /* Returns 100 times the current thread's recent_cpu value. */
 int
 thread_get_recent_cpu (void)
