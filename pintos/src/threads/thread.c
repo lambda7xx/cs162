@@ -72,6 +72,7 @@ static void schedule (void);
 void thread_schedule_tail (struct thread *prev);
 static tid_t allocate_tid (void);
 static fixed_point_t load_avg;
+static fixed_point_t recent_cpu;
 /* Initializes the threading system by transforming the code
    that's currently running into a thread.  This can't work in
    general and it is possible in this case only because loader.S
@@ -100,6 +101,7 @@ thread_init (void)
   initial_thread->status = THREAD_RUNNING;
   initial_thread->tid = allocate_tid ();
   load_avg = fix_int(0);//system boot
+  recent_cpu = fix_int(0);
 }
 
 /* Starts preemptive thread scheduling by enabling interrupts.
@@ -111,7 +113,7 @@ thread_start (void)
   struct semaphore idle_started;
   sema_init (&idle_started, 0);
   thread_create ("idle", PRI_MIN, idle, &idle_started);
-
+  
   /* Start preemptive thread scheduling. */
   intr_enable ();
 
@@ -357,10 +359,6 @@ void thread_block_ticks(struct thread *t,void * aux UNUSED )
    if(t->block_ticks == 0)
 	thread_unblock(t); 
 }
-	//t->ticks--;
-     //	if(t->ticks == 0)
-//		thread_unblock(t);//如果ticks为0,则unblcok这个进程
-//	t->ticks--;
 }
 /* Sets the current thread's priority to NEW_PRIORITY. */
 void
@@ -374,7 +372,7 @@ thread_set_priority (int new_priority)
 	thread_yield();
 }
   intr_set_level(old_level);
- // thread_yield();
+ 
 }
 
 /* Returns the current thread's priority. */
@@ -404,31 +402,31 @@ int
 thread_get_load_avg (void)
 {
   /* Not yet implemented. */
-  int ready_threads = 0;
-  if(thread_current() == idle_thread)
-	ready_threads = 0;
-  else
-	ready_threads = list_size(&ready_list) + 1;
-  int i = 0;
-  int result = load_avg.f;
-  if(timer_ticks() % 100 == 0){
-  i++;
-  
-  fixed_point_t p1 = fix_div(fix_int(59),fix_int(60));	//59/60
-  fixed_point_t p2 = fix_inv(fix_int(60));//1/60
-  printf("p2 is %d\n",p2.f); 
-  fixed_point_t temp1 = fix_mul(p1,load_avg);
-  printf("temp1 is %d\n",temp1.f);
-  fixed_point_t temp2 = fix_scale(p2,ready_threads);
-   printf("temp2 is %d\n",temp2.f);
-  load_avg = fix_add(temp1,temp2);
-  printf("the load_avg is %d and the ready_threads is %d\n", load_avg.f, ready_threads); 
-   result = fix_round(fix_scale(load_avg,100));
-   printf("the result is %d\n", result);
+   if(timer_ticks() % 100 == 0) {
+      fixed_point_t p2 ;
+      int ready_threads = num_ready_threads();
+      //load_avg = fix_unscale(fix_scale(load_avg,59),60);
+      load_avg = fix_mul(load_avg,fix_frac(59,60));//59/60 * load_avg
+      p2 = fix_frac(ready_threads,60);
+      
+     load_avg = fix_add(load_avg,p2);
+   
 }
- return result;
+ return fix_round(fix_scale(load_avg,100));
+ 
 }
-
+int num_ready_threads()
+{
+  struct list_elem * e;
+  size_t ready_threads = 0;
+  for(e = list_begin(&all_list); e != list_end(&all_list);e = list_next(e))
+{	
+  struct thread * temp = list_entry(e,struct thread,elem);
+  if(temp->name != idle_thread && (temp->status == THREAD_RUNNING || temp->status == THREAD_READY))
+	ready_threads++;
+} 
+  return ready_threads;
+}
 /* Returns 100 times the current thread's recent_cpu value. */
 int
 thread_get_recent_cpu (void)
@@ -528,6 +526,8 @@ init_thread (struct thread *t, const char *name, int priority)
   list_init(&t->locks);
   t->waiting_threads = NULL;
   t->num_lock = 0;
+  t->nice = fix_int(0);
+  
   t->old_priority = priority;
   old_level = intr_disable ();
     list_insert_ordered(&all_list,&t->allelem,(list_less_func *) &thread_cmp_priority,NULL);
