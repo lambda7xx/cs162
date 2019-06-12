@@ -393,8 +393,8 @@ int
 thread_get_load_avg (void)
 { 
  
- /*return fix_round(fix_scale(load_avg,100));*/
-  return fix_trunc(fix_scale(load_avg,100));
+ return fix_round(fix_scale(load_avg,100));
+  //return fix_trunc(fix_scale(load_avg,100));
 }
 void thread_update_load_avg(){
    ASSERT(thread_mlfqs);
