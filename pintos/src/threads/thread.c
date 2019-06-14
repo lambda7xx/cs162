@@ -205,8 +205,10 @@ thread_create (const char *name, int priority,
   t->block_ticks = 0;
   /* Add to run queue. */
   thread_unblock (t);//11
+  if(!thread_mlfqs){
  if(thread_current()->priority < t->priority)
 	thread_yield();//12完成线程切换
+}
   return tid;
 }
 
