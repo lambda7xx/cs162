@@ -344,6 +344,12 @@ void thread_foreach (thread_action_func *func, void *aux){
       func (t, aux);
     }
 }
+/*
+ *
+ *只有thread_current()的block_ticks > 0
+ * 其它的线程的block_ticks = 0;
+ * 然后在timer_interrupt()函数中，每个一段时间，执行这个函数，虽然我也不知道具体细节
+ */
 void thread_block_ticks(struct thread *t,void * aux UNUSED ){
    if(t->status == THREAD_BLOCKED && t->block_ticks >0){
 	t->block_ticks--;

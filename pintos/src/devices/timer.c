@@ -94,7 +94,6 @@ timer_sleep (int64_t ticks)
   //int64_t start = timer_ticks ();
    //start是此时刻t0的时间
   ASSERT (intr_get_level () == INTR_ON);
-   ASSERT (intr_get_level () == INTR_ON);
   enum intr_level old_level = intr_disable ();
   struct thread *current_thread = thread_current ();
   current_thread->block_ticks = ticks;
