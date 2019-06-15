@@ -251,6 +251,8 @@ thread_unblock (struct thread *t)
   t->status = THREAD_READY;
   intr_set_level (old_level);
 }
+
+
 bool thread_cmp_priority(const struct list_elem *a,const struct list_elem *b, void * aux UNUSED){
  	return list_entry(a,struct thread, elem)->priority > list_entry(b, struct thread ,elem)->priority;
 }

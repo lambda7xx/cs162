@@ -73,8 +73,8 @@ sema_down (struct semaphore *sema)
     {  
       
       //list_push_back (&sema->waiters, &thread_current ()->elem);
-      //my code
-       list_insert_ordered(&sema->waiters,&thread_current()->elem,(list_less_func *) &thread_cmp_priority,NULL);//10
+      
+       list_insert_ordered(&sema->waiters,&thread_current()->elem,thread_cmp_priority,NULL);//10
 
       thread_block ();//11
    //如果sema->vlaue 为0.将其插入sema->waiters,然后调用thread_block(),使thread_current()睡眠。然后完成调度
@@ -208,7 +208,7 @@ lock_acquire (struct lock *lock)
   ASSERT (!lock_held_by_current_thread (lock));
  
  //int priority = thread_current()->priority;
- if(lock->holder != NULL && !thread_mlfqs)//线1想要锁0，但锁0在main手里，所以main优先级要变
+ if(lock->holder != NULL )//线1想要锁0，但锁0在main手里，所以main优先级要变
 	{
 	struct lock *temp_lock;
 	thread_current()->waiting_threads = lock;
@@ -221,7 +221,7 @@ lock_acquire (struct lock *lock)
 	}
 }
   sema_down (&lock->semaphore);
- if(!thread_mlfqs)//表示该锁没有被拿到
+ if(lock->holder == NULL)//表示该锁没有被拿到
   	{
         lock->max_priority = thread_current()->priority;	
 	thread_hold_lock(lock);
