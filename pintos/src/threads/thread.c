@@ -72,7 +72,7 @@ static void schedule (void);
 void thread_schedule_tail (struct thread *prev);
 static tid_t allocate_tid (void);
 static fixed_point_t load_avg;
-static fixed_point_t recent_cpu;
+
 /* Initializes the threading system by transforming the code
    that's currently running into a thread.  This can't work in
    general and it is possible in this case only because loader.S
@@ -206,9 +206,7 @@ thread_create (const char *name, int priority,
   /* Add to run queue. */
   thread_unblock (t);//11
   //if(!thread_mlfqs){
-  if(thread_mlfqs){
-	t->priority = fix_trunc(fix_sub(fix_sub(fix_int(PRI_MAX),fix_unscale(t->recent_cpu,4)),fix_int(t->nice * 2)));
-}
+ 
  if(thread_current()->priority < t->priority)
 	thread_yield();//12完成线程切换
 
@@ -387,13 +385,12 @@ thread_set_nice (int nice )
 {
   /* Not yet implemented. */
    thread_current()->nice = nice;
-   int old_priority = thread_current()->priority;
-   thread_current()->priority = fix_trunc(fix_sub(fix_sub(fix_int(PRI_MAX),fix_unscale(recent_cpu,4)),fix_int(nice * 2)));
+   //int old_priority = thread_current()->priority;
+   thread_current()->priority = fix_trunc(fix_sub(fix_sub(fix_int(PRI_MAX),fix_unscale(thread_current()->recent_cpu,4)),fix_int(nice * 2)));
    if(thread_current()->priority > PRI_MAX)
 	thread_current()->priority = PRI_MAX;
    if(thread_current()->priority < PRI_MIN)
 	thread_current()->priority = PRI_MIN;
-   if(old_priority > thread_current()->priority)
    	thread_yield();/*争夺CPU */
 }
 
@@ -439,7 +436,7 @@ void thread_mlfqs_update_priority(void)
   ASSERT(thread_mlfqs);
   for(e = list_begin(&all_list); e != list_end(&all_list);e = list_next(e)){
 	struct thread * t = list_entry(e,struct thread,allelem);
-	t->priority =  fix_trunc(fix_sub(fix_sub(fix_int(PRI_MAX),fix_unscale(recent_cpu,4)),fix_int(t->nice * 2)));
+	t->priority =  fix_trunc(fix_sub(fix_sub(fix_int(PRI_MAX),fix_unscale(t->recent_cpu,4)),fix_int(t->nice * 2)));
         if(t->priority > PRI_MAX)
 		t->priority = PRI_MAX;
  	if(t->priority < PRI_MIN)
@@ -558,7 +555,7 @@ init_thread (struct thread *t, const char *name, int priority)
   t->recent_cpu = fix_int(0);
   if(thread_mlfqs){ 
   /*define MLFQ */
-   t->priority =  fix_trunc(fix_sub(fix_sub(fix_int(PRI_MAX),fix_unscale(recent_cpu,4)),fix_int(t->nice * 2)));
+   t->priority =  fix_trunc(fix_sub(fix_sub(fix_int(PRI_MAX),fix_unscale(t->recent_cpu,4)),fix_int(t->nice * 2)));
   if(t->priority > PRI_MAX)
 	t->priority = PRI_MAX;
   if(t->priority  < PRI_MIN)
