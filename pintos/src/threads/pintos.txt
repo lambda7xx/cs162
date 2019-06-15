@@ -1,0 +1,4 @@
+1 priority-danate-sema.c理解:
+	线程h把l的优先级提高了到36，之前是32，此时l和m都在等同一个sema,在main线程执行
+        sema_up(&ls.sema)后，l和m争夺这个sema,按照优先级大小分配sema,优先级大的在sema->waiters这个队列前面，  m线程优先级为34，所以我在threads/synch.c的sema_up()函数加入list_sort(&sema->waiters,thread_cmp_priority,NULL);使sema->waiters这个链表按照线程优先级大小重新排列，优先级大的在前面，经过list_sort()后，l线程在m前面，所以list_entry(list_pop_front(&sema->waiters),struct thread,elem)得到l显线程:
+
