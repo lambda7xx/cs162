@@ -106,6 +106,7 @@ struct thread
     int num_lock;//给当前线程thread_current()加的锁数，
     /* Owned by thread.c. */
     int  nice;
+    fixed_point_t recent_cpu;
     unsigned magic;                     /* Detects stack overflow. */
   };
 
@@ -146,6 +147,10 @@ int thread_get_recent_cpu (void);
 int thread_get_load_avg (void);
 bool thread_cmp_priority(const struct list_elem *a ,const struct list_elem *b, void * aux UNUSED);
 void thread_update_priority(struct thread *t);
+void thread_mlfqs_update_priority(void );/*once every fourth clock tick,recalculated priority of every thread */
 
+void running_thread_update_recent_cpu(void);/*every timer interrupt,the recent_cpu increment by 1*/
+
+void thread_update_recent_cpu(void );/*every second ,the recent_cpu update by the folumate */
 void thread_update_load_avg(void); /*update the load_avg*/
 #endif /* threads/thread.h */

@@ -385,9 +385,27 @@ thread_set_nice (int nice UNUSED)
   /* Not yet implemented. */
    thread_current()->nice = nice;
    thread_current()->priority = fix_trunc(fix_sub(fix_sub(fix_int(PRI_MAX),fix_unscale(recent_cpu,4)),fix_int(nice * 2)));
-  thread_yield();
+   thread_yield();/*争夺CPU */
 }
 
+void running_thread_update_recent_cpu(void){
+  if(thread_current() == idle_thread)
+	return ;
+  else
+	thread_current()->recent_cpu = fix_add(thread_current()->recent_cpu,fix_int(1));
+}
+void thread_update_recent_cpu(void){
+  enum intr_level old_level = intr_disable();
+  struct list_elem *e;
+  ASSERT(thread_mlfqs);
+  for(e = list_begin(&all_list); e != list_end(&all_list);e = list_next(e)){
+        struct thread * t = list_entry(e,struct thread,allelem);
+        t->recent_cpu = fix_add(fix_int(t->nice),fix_mul(fix_div(fix_scale(load_avg,2),fix_add(fix_scale(load_avg,2),fix_int(1))),t->recent_cpu));
+  
+}
+ intr_set_level(old_level);
+
+}
 /* Returns the current thread's nice value. */
 int
 thread_get_nice (void)
@@ -400,16 +418,25 @@ thread_get_nice (void)
 int
 thread_get_load_avg (void)
 { 
- 
-<<<<<<< HEAD
- //return fix_round(fix_scale(load_avg,100));
-  return fix_trunc(fix_scale(load_avg,100));
-=======
  return fix_round(fix_scale(load_avg,100));
-  //return fix_trunc(fix_scale(load_avg,100));
->>>>>>> f3e811f7f8776f74469293b54c66a5877ff970e3
 }
-void thread_update_load_avg(){
+void thread_mlfqs_update_priority(void)
+{ 
+  enum intr_level old_level = intr_disable();
+  struct list_elem *e;
+  ASSERT(thread_mlfqs);
+  for(e = list_begin(&all_list); e != list_end(&all_list);e = list_next(e)){
+	struct thread * t = list_entry(e,struct thread,allelem);
+	t->priority =  fix_trunc(fix_sub(fix_sub(fix_int(PRI_MAX),fix_unscale(recent_cpu,4)),fix_int(t->nice * 2)));
+        if(t->priority > PRI_MAX)
+		t->priority = PRI_MAX;
+ 	if(t->priority < PRI_MIN)
+		t->priority = PRI_MIN;
+}
+ intr_set_level(old_level);
+} 
+
+void thread_update_load_avg(void){
    ASSERT(thread_mlfqs);
    
    int ready_threads = list_size(&ready_list);
@@ -426,7 +453,7 @@ int
 thread_get_recent_cpu (void)
 {
   /* Not yet implemented. */
-  return 0;
+  return fix_round(fix_scale(thread_current()->recent_cpu,100));
 }
 
 /* Idle thread.  Executes when no other thread is ready to run.
@@ -516,6 +543,7 @@ init_thread (struct thread *t, const char *name, int priority)
   t->stack = (uint8_t *) t + PGSIZE;
   t->priority = priority;
   t->nice = 0;
+  t->recent_cpu = fix_int(0);
   if(thread_mlfqs){ 
   /*define MLFQ */
    t->priority =  fix_trunc(fix_sub(fix_sub(fix_int(PRI_MAX),fix_unscale(recent_cpu,4)),fix_int(t->nice * 2)));
@@ -526,7 +554,7 @@ init_thread (struct thread *t, const char *name, int priority)
   list_init(&t->locks);
   t->waiting_threads = NULL;
   t->num_lock = 0;
-  /*t->nice = 0;*/
+  t->nice = 0;
   
   t->old_priority = priority;
   old_level = intr_disable ();
