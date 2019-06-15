@@ -205,10 +205,13 @@ thread_create (const char *name, int priority,
   t->block_ticks = 0;
   /* Add to run queue. */
   thread_unblock (t);//11
-  if(!thread_mlfqs){
+  //if(!thread_mlfqs){
+  if(thread_mlfqs){
+	t->priority = fix_trunc(fix_sub(fix_sub(fix_int(PRI_MAX),fix_unscale(t->recent_cpu,4)),fix_int(t->nice * 2)));
+}
  if(thread_current()->priority < t->priority)
 	thread_yield();//12完成线程切换
-}
+
   return tid;
 }
 
@@ -380,12 +383,18 @@ thread_get_priority (void)
 
 /* Sets the current thread's nice value to NICE. */
 void
-thread_set_nice (int nice UNUSED)
+thread_set_nice (int nice )
 {
   /* Not yet implemented. */
    thread_current()->nice = nice;
+   int old_priority = thread_current()->priority;
    thread_current()->priority = fix_trunc(fix_sub(fix_sub(fix_int(PRI_MAX),fix_unscale(recent_cpu,4)),fix_int(nice * 2)));
-   thread_yield();/*争夺CPU */
+   if(thread_current()->priority > PRI_MAX)
+	thread_current()->priority = PRI_MAX;
+   if(thread_current()->priority < PRI_MIN)
+	thread_current()->priority = PRI_MIN;
+   if(old_priority > thread_current()->priority)
+   	thread_yield();/*争夺CPU */
 }
 
 void running_thread_update_recent_cpu(void){
@@ -394,6 +403,8 @@ void running_thread_update_recent_cpu(void){
   else
 	thread_current()->recent_cpu = fix_add(thread_current()->recent_cpu,fix_int(1));
 }
+
+
 void thread_update_recent_cpu(void){
   enum intr_level old_level = intr_disable();
   struct list_elem *e;
@@ -420,6 +431,7 @@ thread_get_load_avg (void)
 { 
  return fix_round(fix_scale(load_avg,100));
 }
+
 void thread_mlfqs_update_priority(void)
 { 
   enum intr_level old_level = intr_disable();
@@ -547,7 +559,10 @@ init_thread (struct thread *t, const char *name, int priority)
   if(thread_mlfqs){ 
   /*define MLFQ */
    t->priority =  fix_trunc(fix_sub(fix_sub(fix_int(PRI_MAX),fix_unscale(recent_cpu,4)),fix_int(t->nice * 2)));
-
+  if(t->priority > PRI_MAX)
+	t->priority = PRI_MAX;
+  if(t->priority  < PRI_MIN)
+	t->priority = PRI_MIN;
 }
   t->magic = THREAD_MAGIC;
   //t->ticks = 0;
