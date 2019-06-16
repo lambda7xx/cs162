@@ -204,8 +204,9 @@ timer_interrupt (struct intr_frame *args UNUSED)
 	thread_mlfqs_update_priority();/* update every thread's priority */
 }
     if(ticks % TIMER_FREQ == 0){
-	thread_update_load_avg();
-	thread_update_recent_cpu();
+	//thread_update_load_avg();
+        thread_update_recent_cpu_and_load_avg();
+//	thread_update_recent_cpu();
 }
    /*if(ticks % 4 == 0)  UPDATE every thread's priority */
        // thread_mlfqs_update_priority();
