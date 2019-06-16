@@ -417,8 +417,14 @@ void running_thread_update_recent_cpu(void){
 }
 
 
-void thread_update_recent_cpu(void){
+void thread_update_recent_cpu_and_load_avg(void){
 //  enum intr_level old_level = intr_disable();
+  int ready_threads = list_size(&ready_list);
+   if(thread_current() == idle_thread)
+        ready_threads = ready_threads;
+   else
+        ready_threads = ready_threads + 1;
+   load_avg = fix_add(fix_mul(fix_frac(59,60),load_avg),fix_unscale(fix_int(ready_threads),60));
   struct list_elem *e;
   //ASSERT(thread_mlfqs);
   for(e = list_begin(&all_list); e != list_end(&all_list);e = list_next(e)){
@@ -460,7 +466,7 @@ void thread_mlfqs_update_priority(void)
 // intr_set_level(old_level);
 } 
 
-void thread_update_load_avg(void){
+/*void thread_update_load_avg(void){
   // ASSERT(thread_mlfqs);
    
    int ready_threads = list_size(&ready_list);
@@ -470,7 +476,7 @@ void thread_update_load_avg(void){
 	ready_threads = ready_threads + 1;
    load_avg = fix_add(fix_mul(fix_frac(59,60),load_avg),fix_unscale(fix_int(ready_threads),60));
  // load_avg =  fix_add(fix_unscale(fix_scale(load_avg, 59), 60), fix_unscale(fix_int(ready_threads), 60));
-}
+}*/
 
 /* Returns 100 times the current thread's recent_cpu value. */
 int
@@ -571,10 +577,10 @@ init_thread (struct thread *t, const char *name, int priority)
   if(thread_mlfqs){ 
   /*define MLFQ */
    t->priority =  fix_trunc(fix_sub(fix_sub(fix_int(PRI_MAX),fix_unscale(t->recent_cpu,4)),fix_int(t->nice * 2)));
-  if(t->priority > PRI_MAX)
+  /*if(t->priority > PRI_MAX)
 	t->priority = PRI_MAX;
   if(t->priority  < PRI_MIN)
-	t->priority = PRI_MIN;
+	t->priority = PRI_MIN;*/
 }
   t->magic = THREAD_MAGIC;
   //t->ticks = 0;
