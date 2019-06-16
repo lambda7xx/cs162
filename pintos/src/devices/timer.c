@@ -200,7 +200,7 @@ timer_interrupt (struct intr_frame *args UNUSED)
   //thread_foreach(thread_block_ticks,NULL);
   if(thread_mlfqs){
     running_thread_update_recent_cpu();
-    if(ticks % 4 == 0){
+    if(ticks % 4 == 0 && ticks % TIMER_FREQ != 0){
 	thread_mlfqs_update_priority();/* update every thread's priority */
 }
     if(ticks % TIMER_FREQ == 0){
