@@ -101,7 +101,6 @@ thread_init (void)
   initial_thread->status = THREAD_RUNNING;
   initial_thread->tid = allocate_tid ();
   load_avg = fix_int(0);//system boot
-  //recent_cpu = fix_int(0);
 }
 
 /* Starts preemptive thread scheduling by enabling interrupts.
@@ -185,7 +184,6 @@ thread_create (const char *name, int priority,
     return TID_ERROR;
 
   /* Initialize thread. */
- // printf("current thread's name is %s\n", thread_current()->name);
   init_thread (t, name, priority);//1
   tid = t->tid = allocate_tid ();//2
 
@@ -205,11 +203,8 @@ thread_create (const char *name, int priority,
   t->block_ticks = 0;
   /* Add to run queue. */
   thread_unblock (t);//11
-  //if(!thread_mlfqs){
- 
  if(thread_current()->priority < t->priority)
 	thread_yield();//12完成线程切换
-
   return tid;
 }
 
@@ -400,8 +395,11 @@ thread_set_nice (int nice )
 {
   /* Not yet implemented. */
    thread_current()->nice = nice;
-   //int old_priority = thread_current()->priority;
+   int old_priority = thread_current()->priority;
    thread_current()->priority = fix_trunc(fix_sub(fix_sub(fix_int(PRI_MAX),fix_unscale(thread_current()->recent_cpu,4)),fix_int(nice * 2)));
+   thread_current()->priority = thread_current()->priority > PRI_MAX ? PRI_MAX:thread_current()->priority;
+   thread_current()->priority = thread_current()->priority < PRI_MIN ? PRI_MIN : thread_current()->priority;
+   if(old_priority > thread_current()->priority)//不再拥有最大优先级
 //   if(thread_current()->priority > PRI_MAX)
 //	thread_current()->priority = PRI_MAX;
  //  if(thread_current()->priority < PRI_MIN)
@@ -429,21 +427,16 @@ return ready_threads;
 }
 
 void thread_update_recent_cpu_and_load_avg(void){
-//  enum intr_level old_level = intr_disable();
   int ready_threads = ready_run_thread();
-   /*if(thread_current() == idle_thread)
-        ready_threads = ready_threads;
-   else
-        ready_threads = ready_threads + 1;*/
+ 
    load_avg = fix_add(fix_mul(fix_frac(59,60),load_avg),fix_unscale(fix_int(ready_threads),60));
   struct list_elem *e;
-  //ASSERT(thread_mlfqs);
   for(e = list_begin(&all_list); e != list_end(&all_list);e = list_next(e)){
         struct thread * t = list_entry(e,struct thread,allelem);
         t->recent_cpu = fix_add(fix_int(t->nice),fix_mul(fix_div(fix_scale(load_avg,2),fix_add(fix_scale(load_avg,2),fix_int(1))),t->recent_cpu));
   
 }
-// intr_set_level(old_level);
+
 
 }
 /* Returns the current thread's nice value. */
@@ -463,18 +456,11 @@ thread_get_load_avg (void)
 
 void thread_mlfqs_update_priority(void)
 { 
- // enum intr_level old_level = intr_disable();
   struct list_elem *e;
- // ASSERT(thread_mlfqs);
   for(e = list_begin(&all_list); e != list_end(&all_list);e = list_next(e)){
 	struct thread * t = list_entry(e,struct thread,allelem);
 	t->priority =  fix_trunc(fix_sub(fix_sub(fix_int(PRI_MAX),fix_unscale(t->recent_cpu,4)),fix_int(t->nice * 2)));
-//        if(t->priority > PRI_MAX)
-//		t->priority = PRI_MAX;
- //	if(t->priority < PRI_MIN)
-//		t->priority = PRI_MIN;
 }
-// intr_set_level(old_level);
 } 
 
 
@@ -577,21 +563,15 @@ init_thread (struct thread *t, const char *name, int priority)
   if(thread_mlfqs){ 
   /*define MLFQ */
    t->priority =  fix_trunc(fix_sub(fix_sub(fix_int(PRI_MAX),fix_unscale(t->recent_cpu,4)),fix_int(t->nice * 2)));
-  /*if(t->priority > PRI_MAX)
-	t->priority = PRI_MAX;
-  if(t->priority  < PRI_MIN)
-	t->priority = PRI_MIN;*/
 }
   t->magic = THREAD_MAGIC;
-  //t->ticks = 0;
   list_init(&t->locks);
   t->waiting_threads = NULL;
   t->num_lock = 0;
   t->nice = 0;
-  
   t->old_priority = priority;
   old_level = intr_disable ();
-    list_insert_ordered(&all_list,&t->allelem,(list_less_func *) &thread_cmp_priority,NULL);
+  list_insert_ordered(&all_list,&t->allelem,(list_less_func *) &thread_cmp_priority,NULL);
    //利用list_insert_ordered将新创造的线程加入all_list这个链表，其中all_list类型为struct list
 //  list_push_back (&all_list, &t->allelem);
   intr_set_level (old_level);
@@ -723,7 +703,6 @@ void thread_update_priority(struct thread * t)
 	{
 	t->priority = old_priority;
 }
-	
 	intr_set_level(old_level);
 }
 

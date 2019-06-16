@@ -90,9 +90,7 @@ void
 timer_sleep (int64_t ticks)
 { 
   if(ticks <= 0)
-	return ;
-  //int64_t start = timer_ticks ();
-   //start是此时刻t0的时间
+	return;
   ASSERT (intr_get_level () == INTR_ON);
   enum intr_level old_level = intr_disable ();
   struct thread *current_thread = thread_current ();
@@ -192,26 +190,19 @@ static void
 timer_interrupt (struct intr_frame *args UNUSED)
 {
   ticks++;
-  //thread_foreach(thread_block_ticks,NULL);
-
   thread_tick ();
-//    thread_tick ();
   thread_update_block_ticks();
-  //thread_foreach(thread_block_ticks,NULL);
   if(thread_mlfqs){
     running_thread_update_recent_cpu();
     if(ticks % 4 == 0 && ticks % TIMER_FREQ != 0){
 	thread_mlfqs_update_priority();/* update every thread's priority */
 }
     if(ticks % TIMER_FREQ == 0){
-	//thread_update_load_avg();
         thread_update_recent_cpu_and_load_avg();
-//	thread_update_recent_cpu();
+
 }
    /*if(ticks % 4 == 0)  UPDATE every thread's priority */
        // thread_mlfqs_update_priority();
-
-
 }
 
 }
