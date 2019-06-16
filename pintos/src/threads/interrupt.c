@@ -71,7 +71,7 @@ intr_get_level (void)
      and "POP" and [IA32-v3a] 5.8.1 "Masking Maskable Hardware
      Interrupts". */
   asm volatile ("pushfl; popl %0" : "=g" (flags));
-		//if FLAG_IF =1 ;开中断，返回INTR_ON
+
   return flags & FLAG_IF ? INTR_ON : INTR_OFF;
 }
 
@@ -109,7 +109,7 @@ intr_disable (void)
      See [IA32-v2b] "CLI" and [IA32-v3a] 5.8.1 "Masking Maskable
      Hardware Interrupts". */
   asm volatile ("cli" : : : "memory");
- //利用cli指令关中断
+
   return old_level;
 }
 

@@ -88,31 +88,12 @@ timer_elapsed (int64_t then)
    be turned on. */
 void
 timer_sleep (int64_t ticks)
-{ 
-  if(ticks <= 0)
-	return;
-  ASSERT (intr_get_level () == INTR_ON);
-  enum intr_level old_level = intr_disable ();
-  struct thread *current_thread = thread_current ();
-  current_thread->block_ticks = ticks;
-  thread_block ();
-  intr_set_level (old_level);
-  /*enum intr_level old_level = intr_disable();
-  struct thread *t = thread_current();//得到当前正在执行的进程
-  t->block_ticks = ticks;
-  thread_block();//阻塞进程
+{
   int64_t start = timer_ticks ();
 
   ASSERT (intr_get_level () == INTR_ON);
   while (timer_elapsed (start) < ticks)
     thread_yield ();
- thread_foreach(thread_block_ticks,NULL);
-  intr_set_level(old_level);
- timer_elapsed(start) 为t1与t0的时间差，
-记为t3，然后如果t3 < ticks,执行一次thread_yield
-然后继续while循环，此时t1变化，
- while (timer_elapsed (start) < ticks)
-    thread_yield ();*/
 }
 
 /* Sleeps for approximately MS milliseconds.  Interrupts must be
@@ -191,20 +172,6 @@ timer_interrupt (struct intr_frame *args UNUSED)
 {
   ticks++;
   thread_tick ();
-  thread_update_block_ticks();
-  if(thread_mlfqs){
-    running_thread_update_recent_cpu();
-    if(ticks % 4 == 0 && ticks % TIMER_FREQ != 0){
-	thread_mlfqs_update_priority();/* update every thread's priority */
-}
-    if(ticks % TIMER_FREQ == 0){
-        thread_update_recent_cpu_and_load_avg();
-
-}
-   /*if(ticks % 4 == 0)  UPDATE every thread's priority */
-       // thread_mlfqs_update_priority();
-}
-
 }
 
 /* Returns true if LOOPS iterations waits for more than one timer

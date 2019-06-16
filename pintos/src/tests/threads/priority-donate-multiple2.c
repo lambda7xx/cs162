@@ -38,27 +38,27 @@ test_priority_donate_multiple2 (void)
   lock_init (&a);
   lock_init (&b);
 
-  lock_acquire (&a);//0
-  lock_acquire (&b);//0.5
+  lock_acquire (&a);
+  lock_acquire (&b);
 
-  thread_create ("a", PRI_DEFAULT + 3, a_thread_func, &a);//1
+  thread_create ("a", PRI_DEFAULT + 3, a_thread_func, &a);
   msg ("Main thread should have priority %d.  Actual priority: %d.",
-       PRI_DEFAULT + 3, thread_get_priority ());//2
+       PRI_DEFAULT + 3, thread_get_priority ());
 
-  thread_create ("c", PRI_DEFAULT + 1, c_thread_func, NULL);//3
+  thread_create ("c", PRI_DEFAULT + 1, c_thread_func, NULL);
 
-  thread_create ("b", PRI_DEFAULT + 5, b_thread_func, &b);//4
+  thread_create ("b", PRI_DEFAULT + 5, b_thread_func, &b);
   msg ("Main thread should have priority %d.  Actual priority: %d.",
-       PRI_DEFAULT + 5, thread_get_priority ());//5
+       PRI_DEFAULT + 5, thread_get_priority ());
 
-  lock_release (&a);//6
+  lock_release (&a);
   msg ("Main thread should have priority %d.  Actual priority: %d.",
-       PRI_DEFAULT + 5, thread_get_priority ());//7
+       PRI_DEFAULT + 5, thread_get_priority ());
 
-  lock_release (&b);//8
-  msg ("Threads b, a, c should have just finished, in that order.");//9
+  lock_release (&b);
+  msg ("Threads b, a, c should have just finished, in that order.");
   msg ("Main thread should have priority %d.  Actual priority: %d.",
-       PRI_DEFAULT, thread_get_priority ());//10
+       PRI_DEFAULT, thread_get_priority ());
 }
 
 static void
@@ -67,9 +67,9 @@ a_thread_func (void *lock_)
   struct lock *lock = lock_;
 
   lock_acquire (lock);
-  msg ("Thread a acquired lock a.");//11
-  lock_release (lock);//12
-  msg ("Thread a finished.");//13
+  msg ("Thread a acquired lock a.");
+  lock_release (lock);
+  msg ("Thread a finished.");
 }
 
 static void
@@ -77,14 +77,14 @@ b_thread_func (void *lock_)
 {
   struct lock *lock = lock_;
 
-  lock_acquire (lock);//14
-  msg ("Thread b acquired lock b.");//15
-  lock_release (lock);//16
-  msg ("Thread b finished.");//17
+  lock_acquire (lock);
+  msg ("Thread b acquired lock b.");
+  lock_release (lock);
+  msg ("Thread b finished.");
 }
 
 static void
 c_thread_func (void *a_ UNUSED)
 {
-  msg ("Thread c finished.");//18
+  msg ("Thread c finished.");
 }

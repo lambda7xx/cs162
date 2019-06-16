@@ -99,18 +99,8 @@ struct thread
     /* Owned by userprog/process.c. */
     uint32_t *pagedir;                  /* Page directory. */
 #endif
-    int64_t block_ticks ;
-<<<<<<< HEAD
-    int old_priority; //旧的优先级
-    struct list locks;//线程拥有的锁的数量
-    struct lock *waiting_threads;//当前多少线程在等待这个锁
-    int num_lock;//给当前线程thread_current()加的锁数，
-=======
-    int old_priority;
->>>>>>> 31e02a0f97f819a069cce2468898679db08c8191
+
     /* Owned by thread.c. */
-    int  nice;
-    fixed_point_t recent_cpu;
     unsigned magic;                     /* Detects stack overflow. */
   };
 
@@ -131,33 +121,23 @@ tid_t thread_create (const char *name, int priority, thread_func *, void *);
 void thread_block (void);
 void thread_unblock (struct thread *);
 
-void thread_update_recent_cpu_and_load_avg(void );
-
-
 struct thread *thread_current (void);
 tid_t thread_tid (void);
 const char *thread_name (void);
 
 void thread_exit (void) NO_RETURN;
 void thread_yield (void);
-int num_ready_threads(void);/* the number of threads is ready or run */
+
 /* Performs some operation on thread t, given auxiliary data AUX. */
 typedef void thread_action_func (struct thread *t, void *aux);
 void thread_foreach (thread_action_func *, void *);
-void thread_block_ticks(struct thread *t,void * aux UNUSED);
+
 int thread_get_priority (void);
 void thread_set_priority (int);
-void thread_donate_priority(struct thread * );
+
 int thread_get_nice (void);
 void thread_set_nice (int);
 int thread_get_recent_cpu (void);
 int thread_get_load_avg (void);
-bool thread_cmp_priority(const struct list_elem *a ,const struct list_elem *b, void * aux UNUSED);
-void thread_update_priority(struct thread *t);
-void thread_mlfqs_update_priority(void );/*once every fourth clock tick,recalculated priority of every thread */
-int ready_run_thread(void);
-void running_thread_update_recent_cpu(void);/*every timer interrupt,the recent_cpu increment by 1*/
-void thread_update_block_ticks(void);
-void thread_update_recent_cpu(void );/*every second ,the recent_cpu update by the folumate */
-void thread_update_load_avg(void); /*update the load_avg*/
+
 #endif /* threads/thread.h */

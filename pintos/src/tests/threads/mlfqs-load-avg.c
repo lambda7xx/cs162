@@ -144,7 +144,6 @@ test_mlfqs_load_avg (void)
   for (i = 0; i < 90; i++)
     {
       int64_t sleep_until = start_time + TIMER_FREQ * (2 * i + 10);
-      //printf("i is %d and skeep_until is %ld\n",i, (long)sleep_until);
       int load_avg;
       timer_sleep (sleep_until - timer_ticks ());
       load_avg = thread_get_load_avg ();

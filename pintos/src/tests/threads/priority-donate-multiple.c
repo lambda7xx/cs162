@@ -32,26 +32,26 @@ test_priority_donate_multiple (void)
   lock_init (&a);
   lock_init (&b);
 
-  lock_acquire (&a);//1
-  lock_acquire (&b);//2
+  lock_acquire (&a);
+  lock_acquire (&b);
 
-  thread_create ("a", PRI_DEFAULT + 1, a_thread_func, &a);//3
+  thread_create ("a", PRI_DEFAULT + 1, a_thread_func, &a);
   msg ("Main thread should have priority %d.  Actual priority: %d.",
-       PRI_DEFAULT + 1, thread_get_priority ());//4
+       PRI_DEFAULT + 1, thread_get_priority ());
 
-  thread_create ("b", PRI_DEFAULT + 2, b_thread_func, &b);//5
+  thread_create ("b", PRI_DEFAULT + 2, b_thread_func, &b);
   msg ("Main thread should have priority %d.  Actual priority: %d.",
-       PRI_DEFAULT + 2, thread_get_priority ());//6
+       PRI_DEFAULT + 2, thread_get_priority ());
 
-  lock_release (&b);//7
-  msg ("Thread b should have just finished.");//8
+  lock_release (&b);
+  msg ("Thread b should have just finished.");
   msg ("Main thread should have priority %d.  Actual priority: %d.",
-       PRI_DEFAULT + 1, thread_get_priority ());//9
+       PRI_DEFAULT + 1, thread_get_priority ());
 
-  lock_release (&a);//10
-  msg ("Thread a should have just finished.");//11
+  lock_release (&a);
+  msg ("Thread a should have just finished.");
   msg ("Main thread should have priority %d.  Actual priority: %d.",
-       PRI_DEFAULT, thread_get_priority ());//12
+       PRI_DEFAULT, thread_get_priority ());
 }
 
 static void
@@ -59,10 +59,10 @@ a_thread_func (void *lock_)
 {
   struct lock *lock = lock_;
 
-  lock_acquire (lock);//13
-  msg ("Thread a acquired lock a.");//14
-  lock_release (lock);//15
-  msg ("Thread a finished.");//16
+  lock_acquire (lock);
+  msg ("Thread a acquired lock a.");
+  lock_release (lock);
+  msg ("Thread a finished.");
 }
 
 static void
@@ -70,8 +70,8 @@ b_thread_func (void *lock_)
 {
   struct lock *lock = lock_;
 
-  lock_acquire (lock);//17
-  msg ("Thread b acquired lock b.");//118
-  lock_release (lock);//19
-  msg ("Thread b finished.");//20
+  lock_acquire (lock);
+  msg ("Thread b acquired lock b.");
+  lock_release (lock);
+  msg ("Thread b finished.");
 }

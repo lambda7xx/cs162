@@ -24,15 +24,8 @@ test_mlfqs_load_1 (void)
   ASSERT (thread_mlfqs);
 
   msg ("spinning for up to 45 seconds, please wait...");
-  /* 
-   *如何spinning for 45秒
-   *因为for循环体里面，没有加终止条件，
-   *所以用load_avg来判断跳出循环，
-   *而测试文件中，只有经过38~45秒之间，load_avg才会spining  for 45 秒
-   *
-   */
+
   start_time = timer_ticks ();
-  /*debug */
   for (;;)
     {
       load_avg = thread_get_load_avg ();
