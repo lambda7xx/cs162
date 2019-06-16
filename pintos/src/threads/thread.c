@@ -418,15 +418,15 @@ void running_thread_update_recent_cpu(void){
 
 
 void thread_update_recent_cpu(void){
-  enum intr_level old_level = intr_disable();
+//  enum intr_level old_level = intr_disable();
   struct list_elem *e;
-  ASSERT(thread_mlfqs);
+  //ASSERT(thread_mlfqs);
   for(e = list_begin(&all_list); e != list_end(&all_list);e = list_next(e)){
         struct thread * t = list_entry(e,struct thread,allelem);
         t->recent_cpu = fix_add(fix_int(t->nice),fix_mul(fix_div(fix_scale(load_avg,2),fix_add(fix_scale(load_avg,2),fix_int(1))),t->recent_cpu));
   
 }
- intr_set_level(old_level);
+// intr_set_level(old_level);
 
 }
 /* Returns the current thread's nice value. */
@@ -446,9 +446,9 @@ thread_get_load_avg (void)
 
 void thread_mlfqs_update_priority(void)
 { 
-  enum intr_level old_level = intr_disable();
+ // enum intr_level old_level = intr_disable();
   struct list_elem *e;
-  ASSERT(thread_mlfqs);
+ // ASSERT(thread_mlfqs);
   for(e = list_begin(&all_list); e != list_end(&all_list);e = list_next(e)){
 	struct thread * t = list_entry(e,struct thread,allelem);
 	t->priority =  fix_trunc(fix_sub(fix_sub(fix_int(PRI_MAX),fix_unscale(t->recent_cpu,4)),fix_int(t->nice * 2)));
@@ -457,11 +457,11 @@ void thread_mlfqs_update_priority(void)
  	if(t->priority < PRI_MIN)
 		t->priority = PRI_MIN;
 }
- intr_set_level(old_level);
+// intr_set_level(old_level);
 } 
 
 void thread_update_load_avg(void){
-   ASSERT(thread_mlfqs);
+  // ASSERT(thread_mlfqs);
    
    int ready_threads = list_size(&ready_list);
    if(thread_current() == idle_thread)
