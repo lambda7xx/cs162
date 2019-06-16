@@ -109,6 +109,8 @@ struct thread
     int old_priority;
 >>>>>>> 31e02a0f97f819a069cce2468898679db08c8191
     /* Owned by thread.c. */
+    int  nice;
+    fixed_point_t recent_cpu;
     unsigned magic;                     /* Detects stack overflow. */
   };
 
@@ -129,13 +131,16 @@ tid_t thread_create (const char *name, int priority, thread_func *, void *);
 void thread_block (void);
 void thread_unblock (struct thread *);
 
+void thread_update_recent_cpu_and_load_avg(void );
+
+
 struct thread *thread_current (void);
 tid_t thread_tid (void);
 const char *thread_name (void);
 
 void thread_exit (void) NO_RETURN;
 void thread_yield (void);
-
+int num_ready_threads(void);/* the number of threads is ready or run */
 /* Performs some operation on thread t, given auxiliary data AUX. */
 typedef void thread_action_func (struct thread *t, void *aux);
 void thread_foreach (thread_action_func *, void *);
@@ -149,4 +154,10 @@ int thread_get_recent_cpu (void);
 int thread_get_load_avg (void);
 bool thread_cmp_priority(const struct list_elem *a ,const struct list_elem *b, void * aux UNUSED);
 void thread_update_priority(struct thread *t);
+void thread_mlfqs_update_priority(void );/*once every fourth clock tick,recalculated priority of every thread */
+int ready_run_thread(void);
+void running_thread_update_recent_cpu(void);/*every timer interrupt,the recent_cpu increment by 1*/
+void thread_update_block_ticks(void);
+void thread_update_recent_cpu(void );/*every second ,the recent_cpu update by the folumate */
+void thread_update_load_avg(void); /*update the load_avg*/
 #endif /* threads/thread.h */

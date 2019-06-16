@@ -45,7 +45,6 @@ void
 sema_init (struct semaphore *sema, unsigned value)
 {
   ASSERT (sema != NULL);
-
   sema->value = value;
   list_init (&sema->waiters);
 }
@@ -69,16 +68,12 @@ sema_down (struct semaphore *sema)
   ASSERT (!intr_context ());
 
   old_level = intr_disable ();
-  while (sema->value == 0)//9
-    {  
-      
+  while (sema->value == 0){//9
+       //list_sort(&sema->waiters,cond_sema_cmp_priority,NULL);
       //list_push_back (&sema->waiters, &thread_current ()->elem);
-      //my code
-       list_insert_ordered(&sema->waiters,&thread_current()->elem,(list_less_func *) &thread_cmp_priority,NULL);//10
-
-      thread_block ();//11
-   //如果sema->vlaue 为0.将其插入sema->waiters,然后调用thread_block(),使thread_current()睡眠。然后完成调度
-   //和线程切换
+       list_insert_ordered(&sema->waiters,&thread_current()->elem,thread_cmp_priority,NULL);//10
+       thread_block ();//11
+   /*如果sema->vlaue 为0.将其插入sema->waiters,然后调用thread_block(),使thread_current()睡眠。然后完成调度和线程切换*/
     }
   sema->value--;
   intr_set_level (old_level);
@@ -122,10 +117,13 @@ sema_up (struct semaphore *sema)
   ASSERT (sema != NULL);
 
   old_level = intr_disable ();
-  if (!list_empty (&sema->waiters))//1
+  if (!list_empty (&sema->waiters)){//1
+    list_sort(&sema->waiters,thread_cmp_priority,NULL);
+    
     thread_unblock (list_entry (list_pop_front (&sema->waiters),
 <<<<<<< HEAD
                                 struct thread, elem));//2
+}
   sema->value++;//3
   thread_yield();//4
 =======
@@ -219,31 +217,29 @@ lock_acquire (struct lock *lock)
   ASSERT (!lock_held_by_current_thread (lock));
  
  //int priority = thread_current()->priority;
- if(lock->holder != NULL && !thread_mlfqs)//线1想要锁0，但锁0在main手里，所以main优先级要变
-	{
+ if(lock->holder != NULL ){//线1想要锁0，但锁0在main手里，所以main优先级要变{
 	struct lock *temp_lock;
 	thread_current()->waiting_threads = lock;
 	temp_lock = lock;
-	while(temp_lock && thread_current()->priority > temp_lock->max_priority )
-	{    
+	while(temp_lock && thread_current()->priority > temp_lock->max_priority){    
 	    temp_lock->max_priority = thread_current()->priority;
             thread_update_priority(temp_lock->holder);	
 	    temp_lock = temp_lock->holder->waiting_threads;
 	}
 }
   sema_down (&lock->semaphore);
- if(!thread_mlfqs)//表示该锁没有被拿到
-  	{
+ if(lock->holder == NULL){//表示该锁没有被拿到{
         lock->max_priority = thread_current()->priority;	
 	thread_hold_lock(lock);
 }
+  //sema_down(&lock->semaphore);
   lock->holder = thread_current();
 }
-void thread_hold_lock(struct lock * lock)
-{
+
+
+void thread_hold_lock(struct lock * lock){
 	enum intr_level old_level = intr_disable();
 	list_insert_ordered(&thread_current()->locks,&lock->elem,lock_cmp_priority, NULL);//插入
-
         int max_priority = list_entry(list_front(&thread_current()->locks),struct lock, elem)->max_priority;
         if(thread_current()->priority < max_priority)//更新优先级
                 thread_current()->priority = max_priority;
@@ -284,7 +280,7 @@ lock_release (struct lock *lock)
   lock->holder = NULL;
 <<<<<<< HEAD
   struct thread * cur = thread_current();
-//  if(thread_current()->locks != NULL)
+  if(!list_empty(&thread_current()->locks))
   	list_remove(&lock->elem);//在当前线程的list中移除该锁
   if(list_empty(&thread_current()->locks)) //线程不拥有锁了，则恢复原来的优先级
 	thread_current()->priority = thread_current()->old_priority;
@@ -370,6 +366,7 @@ cond_wait (struct condition *cond, struct lock *lock)
 
   sema_init (&waiter.semaphore, 0);
   list_push_back (&cond->waiters, &waiter.elem);
+  //list_insert_ordered(&cond->waiters,&waiter.elem,cond_sema_cmp_priority,NULL);
   lock_release (lock);
   sema_down (&waiter.semaphore);
   lock_acquire (lock);
