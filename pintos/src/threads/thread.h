@@ -151,7 +151,7 @@ int thread_get_load_avg (void);
 bool thread_cmp_priority(const struct list_elem *a ,const struct list_elem *b, void * aux UNUSED);
 void thread_update_priority(struct thread *t);
 void thread_mlfqs_update_priority(void );/*once every fourth clock tick,recalculated priority of every thread */
-
+int ready_run_thread(void);
 void running_thread_update_recent_cpu(void);/*every timer interrupt,the recent_cpu increment by 1*/
 void thread_update_block_ticks(void);
 void thread_update_recent_cpu(void );/*every second ,the recent_cpu update by the folumate */
