@@ -347,6 +347,19 @@ void thread_foreach (thread_action_func *func, void *aux){
       func (t, aux);
     }
 }
+void thread_update_block_ticks(void){
+  enum intr_level old_level = intr_disable();
+   struct list_elem * e;
+   for(e =list_begin(&all_list);e != list_end(&all_list); e = list_next(e)){
+	struct thread * t = list_entry(e,struct thread, allelem);
+        if(t->status == THREAD_BLOCKED && t->block_ticks >0){
+		t->block_ticks = t->block_ticks - 1;
+		if(t->block_ticks == 0)
+			thread_unblock(t);
+}
+}
+intr_set_level(old_level);   
+}
 /*
  *
  *只有thread_current()的block_ticks > 0

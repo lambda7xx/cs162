@@ -150,7 +150,7 @@ void thread_update_priority(struct thread *t);
 void thread_mlfqs_update_priority(void );/*once every fourth clock tick,recalculated priority of every thread */
 
 void running_thread_update_recent_cpu(void);/*every timer interrupt,the recent_cpu increment by 1*/
-
+void thread_update_block_ticks(void);
 void thread_update_recent_cpu(void );/*every second ,the recent_cpu update by the folumate */
 void thread_update_load_avg(void); /*update the load_avg*/
 #endif /* threads/thread.h */
