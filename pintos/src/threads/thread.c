@@ -348,7 +348,7 @@ void thread_foreach (thread_action_func *func, void *aux){
     }
 }
 void thread_update_block_ticks(void){
-  enum intr_level old_level = intr_disable();
+  //enum intr_level old_level = intr_disable();
    struct list_elem * e;
    for(e =list_begin(&all_list);e != list_end(&all_list); e = list_next(e)){
 	struct thread * t = list_entry(e,struct thread, allelem);
@@ -358,7 +358,7 @@ void thread_update_block_ticks(void){
 			thread_unblock(t);
 }
 }
-intr_set_level(old_level);   
+//intr_set_level(old_level);   
 }
 /*
  *
@@ -402,10 +402,10 @@ thread_set_nice (int nice )
    thread_current()->nice = nice;
    //int old_priority = thread_current()->priority;
    thread_current()->priority = fix_trunc(fix_sub(fix_sub(fix_int(PRI_MAX),fix_unscale(thread_current()->recent_cpu,4)),fix_int(nice * 2)));
-   if(thread_current()->priority > PRI_MAX)
-	thread_current()->priority = PRI_MAX;
-   if(thread_current()->priority < PRI_MIN)
-	thread_current()->priority = PRI_MIN;
+//   if(thread_current()->priority > PRI_MAX)
+//	thread_current()->priority = PRI_MAX;
+ //  if(thread_current()->priority < PRI_MIN)
+//	thread_current()->priority = PRI_MIN;
    	thread_yield();/*争夺CPU */
 }
 
@@ -452,10 +452,10 @@ void thread_mlfqs_update_priority(void)
   for(e = list_begin(&all_list); e != list_end(&all_list);e = list_next(e)){
 	struct thread * t = list_entry(e,struct thread,allelem);
 	t->priority =  fix_trunc(fix_sub(fix_sub(fix_int(PRI_MAX),fix_unscale(t->recent_cpu,4)),fix_int(t->nice * 2)));
-        if(t->priority > PRI_MAX)
-		t->priority = PRI_MAX;
- 	if(t->priority < PRI_MIN)
-		t->priority = PRI_MIN;
+//        if(t->priority > PRI_MAX)
+//		t->priority = PRI_MAX;
+ //	if(t->priority < PRI_MIN)
+//		t->priority = PRI_MIN;
 }
 // intr_set_level(old_level);
 } 
