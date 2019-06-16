@@ -196,7 +196,8 @@ timer_interrupt (struct intr_frame *args UNUSED)
 
   thread_tick ();
 //    thread_tick ();
-  thread_foreach(thread_block_ticks,NULL);
+  thread_update_block_ticks();
+  //thread_foreach(thread_block_ticks,NULL);
   if(thread_mlfqs){
     running_thread_update_recent_cpu();
     if(ticks % 4 == 0){
