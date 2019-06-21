@@ -1,0 +1,35 @@
+MEMCPY(3)                     Linux Programmer's Manual                     MEMCPY(3)
+
+
+
+NNAAMMEE
+       memcpy - copy memory area
+
+SSYYNNOOPPSSIISS
+       ##iinncclluuddee <<ssttrriinngg..hh>>
+
+       vvooiidd **mmeemmccppyy((vvooiidd **_d_e_s_t,, ccoonnsstt vvooiidd **_s_r_c,, ssiizzee__tt _n));;
+
+DDEESSCCRRIIPPTTIIOONN
+       The mmeemmccppyy() function copies _n bytes from memory area _s_r_c to memory area _d_e_s_t.
+       The memory areas must not overlap.  Use mmeemmmmoovvee(3)  if  the  memory  areas  do
+       overlap.
+
+RREETTUURRNN VVAALLUUEE
+       The mmeemmccppyy() function returns a pointer to _d_e_s_t.
+
+CCOONNFFOORRMMIINNGG TTOO
+       SVr4, 4.3BSD, C89, C99, POSIX.1-2001.
+
+SSEEEE AALLSSOO
+       bbccooppyy(3),  mmeemmccccppyy(3),  mmeemmmmoovvee(3),  mmeemmppccppyy(3),  ssttrrccppyy(3), ssttrrnnccppyy(3), wwmmeemm‐‐
+       ccppyy(3)
+
+CCOOLLOOPPHHOONN
+       This page is part of release 3.54 of the Linux _m_a_n_-_p_a_g_e_s project.  A  descrip‐
+       tion  of  the  project,  and information about reporting bugs, can be found at
+       http://www.kernel.org/doc/man-pages/.
+
+
+
+                                      2010-11-15                            MEMCPY(3)
