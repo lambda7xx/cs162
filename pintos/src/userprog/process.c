@@ -54,20 +54,51 @@ static void
 start_process (void *file_name_)
 {
   char *file_name = file_name_;
+ 
   struct intr_frame if_;
   bool success;
+  char *temp_file_name = file_name_;
+   /*
+   *if success,then the if_.esp is in PHYS_BASE,now we extracrt the string
+   * from the file_name, which is separated from the space
+   *and set up the esp
+   */
+  int len = strlen(file_name)+1 ;
+  char *argv[128];
+   int argc = 0;
+   char * token, *save_ptr;
+   token = strtok_r(temp_file_name," ",&save_ptr);
+   while(token != NULL){
+        argv[argc] = token;
+        argc++;
+        token= strtok_r(NULL," ",&save_ptr);
+ }
+  argv[argc] = NULL;
 
-  /* Initialize interrupt frame and load executable. */
+  /* Initialize interrupt frame and load executable.*/
   memset (&if_, 0, sizeof if_);
   if_.gs = if_.fs = if_.es = if_.ds = if_.ss = SEL_UDSEG;
   if_.cs = SEL_UCSEG;
   if_.eflags = FLAG_IF | FLAG_MBS;
   success = load (file_name, &if_.eip, &if_.esp);
-
+  if_.esp -= len;
+  memcpy(if_.esp,argv[0],len);
+  unsigned int  temp = (unsigned int) if_.esp;
+   while(temp % 4 != 0){
+	if_.esp = if_.esp -1;
+        temp = (unsigned int) if_.esp;
+}
+   if_.esp -= 4;
+   memset(if_.esp,0,4);
+  // memcpy(if_.esp,(char * 0),4);
   /* If load failed, quit. */
   palloc_free_page (file_name);
   if (!success)
     thread_exit ();
+  
+  
+  
+  
 
   /* Start the user process by simulating a return from an
      interrupt, implemented by intr_exit (in
