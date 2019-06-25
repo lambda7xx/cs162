@@ -41,8 +41,14 @@ process_execute (const char *file_name)
     return TID_ERROR;
   strlcpy (fn_copy, file_name, PGSIZE);
 
+   char *parse_name ;
+  char *temp_saveptr;
+  parse_name = palloc_get_page(0);
+  strlcpy(parse_name, file_name, PGSIZE);
+  parse_name = strtok_r(parse_name, " ", &temp_saveptr);
+
   /* Create a new thread to execute FILE_NAME. */
-  tid = thread_create (file_name, PRI_DEFAULT, start_process, fn_copy);
+  tid = thread_create (parse_name, PRI_DEFAULT, start_process, fn_copy);
   if (tid == TID_ERROR)
     palloc_free_page (fn_copy);
   return tid;
@@ -60,7 +66,6 @@ start_process (void *file_name_)
   char *parse_name ;
   char *temp_saveptr;
   parse_name = palloc_get_page(0);
-  //parse_name = malloc(strlen(file_name)+1);
   strlcpy(parse_name, file_name, PGSIZE);
   parse_name = strtok_r(parse_name, " ", &temp_saveptr);
    /*
@@ -75,7 +80,6 @@ start_process (void *file_name_)
    int token_len[128] = {0};
    token = strtok_r(file_name," ",&save_ptr);
    while(token != NULL){
-        //memcpy(argv[argc],token,strlen(token)+1);
         argv[argc] = token;
 	token_len[argc] = strlen(token)+1;
         argc++;
@@ -113,7 +117,7 @@ start_process (void *file_name_)
  	int addr_len = argc-1;
  	while(addr_len >= 0){
 		if_.esp -= 4;
-		memcpy(if_.esp,addr[addr_len],4);/*argv[argc-1] ~ argv[0] */
+		memcpy(if_.esp,&addr[addr_len],4);/*argv[argc-1] ~ argv[0] */
 		addr_len--;
 	}	
 	char * argv_addr = if_.esp; /* argv[0]  address */
@@ -121,48 +125,14 @@ start_process (void *file_name_)
 	memcpy(if_.esp, &argv_addr,4);/* set up the argv address */
 
  /* now we set up the argc */
-//	if_.esp -= 4;
-   	//memcpy(if_.esp,(char *) argc,4); 
         if_.esp -=3;
 	memset(if_.esp,0,3);
 	if_.esp -=1;
 	memset(if_.esp,argc,1);
 	if_.esp -= 4;
 	memset(if_.esp,0,4);
-
-   	hex_dump(if_.esp,if_.esp,50,true); 
-
 }
-  /*if_.esp -= len;
-  memcpy(if_.esp,argv[0],len);// arg[0] 
- char * addr = if_.esp;
-  unsigned int  align_len = 0;
-  unsigned int  temp = (unsigned int) if_.esp;
-   while(temp % 4 != 0){
-	if_.esp = if_.esp -1;
- 	align_len++;
-        temp = (unsigned int) if_.esp;
-}
-   memset(if_.esp,0,align_len);// word -liagn 
-   if_.esp -= 4;
-  // memset(if_.esp,0,4);
-   memset(if_.esp,0,4); // argv[1] 
-   if_.esp -= 4;
-   memcpy(if_.esp,&addr,4);//the address of argv[0] 
-   addr = if_.esp;
-   if_.esp -= 4;
-   memcpy(if_.esp,&addr,4);// the argv address 
-   if_.esp -=4;
-   //memcpy(if_.esp,(char *)argc,4);
-   //(int *)if_.esp  = argc;
-   //memset(if_.esp+argc,0,4 - argc);
-   memset(if_.esp,1,argc);
-   memset(if_.esp+argc, 0, 4 - argc);
-   if_.esp -=4;
-   memset(if_.esp,0,4);*/
-   //hex_dump(if_.esp,if_.esp,50,true);
-   //memcpy(if_.esp, (void *) 0,4); 
-  /* If load failed, quit. */
+  /* If load failed,  quit */
   palloc_free_page (file_name);
   if (!success)
     thread_exit ();
