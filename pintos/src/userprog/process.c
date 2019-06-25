@@ -57,19 +57,24 @@ start_process (void *file_name_)
  
   struct intr_frame if_;
   bool success;
-  char *temp_file_name = file_name_;
+  char *temp_file_name = file_name_  ;
+  //temp_file_name = palloc_get_page(0);
+ // strlcpy(temp_file_name, file_name, PGSIZE);
    /*
    *if success,then the if_.esp is in PHYS_BASE,now we extracrt the string
    * from the file_name, which is separated from the space
    *and set up the esp
    */
-  int len = strlen(file_name)+1 ;
+  //int len = strlen(file_name)+1 ;
   char *argv[128];
    int argc = 0;
    char * token, *save_ptr;
+   int token_len[128] = {0};
    token = strtok_r(temp_file_name," ",&save_ptr);
    while(token != NULL){
+        //memcpy(argv[argc],token,strlen(token)+1);
         argv[argc] = token;
+	token_len[argc] = strlen(token)+1;
         argc++;
         token= strtok_r(NULL," ",&save_ptr);
  }
@@ -81,8 +86,8 @@ start_process (void *file_name_)
   if_.cs = SEL_UCSEG;
   if_.eflags = FLAG_IF | FLAG_MBS;
   success = load (file_name, &if_.eip, &if_.esp);
-  if_.esp -= len;
-  memcpy(if_.esp,argv[0],len);/* arg[0] */
+  /*if_.esp -= len;
+  memcpy(if_.esp,argv[0],len);// arg[0] 
  char * addr = if_.esp;
   unsigned int  align_len = 0;
   unsigned int  temp = (unsigned int) if_.esp;
@@ -91,15 +96,15 @@ start_process (void *file_name_)
  	align_len++;
         temp = (unsigned int) if_.esp;
 }
-   memset(if_.esp,0,align_len);/* word -liagn */
+   memset(if_.esp,0,align_len);// word -liagn 
    if_.esp -= 4;
   // memset(if_.esp,0,4);
-   memset(if_.esp,0,4); /* argv[1] */
+   memset(if_.esp,0,4); // argv[1] 
    if_.esp -= 4;
-   memcpy(if_.esp,&addr,4);/*the address of argv[0] */
+   memcpy(if_.esp,&addr,4);//the address of argv[0] 
    addr = if_.esp;
    if_.esp -= 4;
-   memcpy(if_.esp,&addr,4);/* the argv address */
+   memcpy(if_.esp,&addr,4);// the argv address 
    if_.esp -=4;
    //memcpy(if_.esp,(char *)argc,4);
    //(int *)if_.esp  = argc;
@@ -107,16 +112,55 @@ start_process (void *file_name_)
    memset(if_.esp,1,argc);
    memset(if_.esp+argc, 0, 4 - argc);
    if_.esp -=4;
-   memset(if_.esp,0,4);
+   memset(if_.esp,0,4);*/
    //hex_dump(if_.esp,if_.esp,50,true);
    //memcpy(if_.esp, (void *) 0,4); 
   /* If load failed, quit. */
   palloc_free_page (file_name);
   if (!success)
     thread_exit ();
-  
-  
- 
+  int len = argc-1;
+  char *addr[argc-1];
+  while(len >=0){
+	if_.esp -= token_len[len];
+	memcpy(if_.esp,&argv[len],token_len[len]);
+	addr[len] = if_.esp;
+	len--;
+}
+  	unsigned word_align = 0;
+  	unsigned temp_addr = (unsigned) if_.esp;
+ 	while(temp_addr % 4 != 0){
+		if_.esp--;
+		temp_addr = (unsigned) if_.esp;
+		word_align++;
+}
+ 	if(word_align != 0){
+   	memset(if_.esp,0,word_align);	
+	}
+ 	if_.esp -= 4;
+ 	memset(if_.esp,0,4); /* argv[argc] */
+ 	int addr_len = argc-1;
+ 	while(addr_len >= 0){
+		if_.esp -= 4;
+		memcpy(if_.esp,&addr[addr_len],4);/*argv[argc-1] ~ argv[0] */
+		addr_len--;
+	}	
+	char * argv_addr = if_.esp; /* argv[0]  address */
+ 	if_.esp -= 4;  
+	memcpy(if_.esp, &argv_addr,4);/* set up the argv address */
+
+ /* now we set up the argc */
+//	if_.esp -= 4;
+   	//memcpy(if_.esp,(char *) argc,4); 
+        if_.esp -=3;
+	memset(if_.esp,0,3);
+	if_.esp -=1;
+	memset(if_.esp,argc,1);
+	if_.esp -= 4;
+	memset(if_.esp,0,4);
+
+   	hex_dump(if_.esp,if_.esp,50,true); 
+
   /* Start the user process by simulating a return from an
      interrupt, implemented by intr_exit (in
      threads/intr-stubs.S).  Because intr_exit takes all of its
