@@ -113,7 +113,8 @@ start_process (void *file_name_)
    	memset(if_.esp,0,word_align);	
 	}
  	if_.esp -= 4;
- 	memset(if_.esp,0,4); /* argv[argc] */
+	*(int*)if_.esp = 0;
+ 	//memset(if_.esp,0,4); /* argv[argc] */
  	int addr_len = argc-1;
  	while(addr_len >= 0){
 		if_.esp -= 4;
@@ -136,8 +137,9 @@ start_process (void *file_name_)
   palloc_free_page (file_name);
   if (!success)
     thread_exit ();
- 
-
+ int *addd = (int*)if_.esp;
+printf("%p\n", addd);
+  hex_dump(if_.esp,if_.esp,48,true);
   /* Start the user process by simulating a return from an
      interrupt, implemented by intr_exit (in
      threads/intr-stubs.S).  Because intr_exit takes all of its
