@@ -137,9 +137,9 @@ start_process (void *file_name_)
   palloc_free_page (file_name);
   if (!success)
     thread_exit ();
- int *addd = (int*)if_.esp;
-printf("%p\n", addd);
-  hex_dump(if_.esp,if_.esp,48,true);
+ //int *addd = (int*)if_.esp;
+//printf("%p\n", addd);
+ // hex_dump(if_.esp,if_.esp,48,true);
   /* Start the user process by simulating a return from an
      interrupt, implemented by intr_exit (in
      threads/intr-stubs.S).  Because intr_exit takes all of its
