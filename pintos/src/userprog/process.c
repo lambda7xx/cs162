@@ -114,7 +114,6 @@ start_process (void *file_name_)
 	}
  	if_.esp -= 4;
 	*(int*)if_.esp = 0;
- 	//memset(if_.esp,0,4); /* argv[argc] */
  	int addr_len = argc-1;
  	while(addr_len >= 0){
 		if_.esp -= 4;
@@ -126,19 +125,19 @@ start_process (void *file_name_)
 	memcpy(if_.esp, &argv_addr,4);/* set up the argv address */
 
  /* now we set up the argc */
-        if_.esp -=3;
-	memset(if_.esp,0,3);
-	if_.esp -=1;
-	memset(if_.esp,argc,1);
+	if_.esp -=4;
+	*(int*)if_.esp = argc;
 	if_.esp -= 4;
-	memset(if_.esp,0,4);
+	*(int*)if_.esp = 0;
+	hex_dump(if_.esp,if_.esp,48,true);
 }
   /* If load failed,  quit */
+ 
   palloc_free_page (file_name);
   if (!success)
     thread_exit ();
- //int *addd = (int*)if_.esp;
-//printf("%p\n", addd);
+ int *addd = (int*)if_.esp;
+ printf("%p\n", addd);
  // hex_dump(if_.esp,if_.esp,48,true);
   /* Start the user process by simulating a return from an
      interrupt, implemented by intr_exit (in
