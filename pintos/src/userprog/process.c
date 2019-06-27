@@ -116,19 +116,17 @@ start_process (void *file_name_)
  	int addr_len = argc-1;
  	while(addr_len >= 0){
 		if_.esp -= 4;
-		*(char **)if_.esp = addr[addr_len];
-		//memcpy(if_.esp,&addr[addr_len],4);/*argv[argc-1] ~ argv[0] */
+		*(char **)if_.esp = addr[addr_len];/*argv[argc-1] ~ argv[0] */
 		addr_len--;
 	}	
-	char * argv_addr = if_.esp; /* argv[0]  address */
- 	if_.esp -= 4;  
-	//	memcpy(if_.esp, &argv_addr,4);/* set up the argv address */
-	*(char**)if_.esp = argv_addr;
+	 /* argv[0]  address */
+ 	if_.esp -= 4;  /* set up the argv address */
+	*(char**)if_.esp = if_.esp + 4;
  /* now we set up the argc */
 	if_.esp -=4;
 	*(int*)if_.esp = argc;
 	if_.esp -= 4;
-	*(int*)if_.esp = 0;
+	*(int *)if_.esp =0;
 	//hex_dump(if_.esp,if_.esp,48,true);
 }
   /* If load failed,  quit */
@@ -136,8 +134,8 @@ start_process (void *file_name_)
   palloc_free_page (file_name);
   if (!success)
     thread_exit ();
- //int *addd = (int*)if_.esp;
-// printf("%p\n", addd);
+   //int *addd = (int*)if_.esp;
+   //printf("%p\n", addd);
   /* Start the user process by simulating a return from an
      interrupt, implemented by intr_exit (in
      threads/intr-stubs.S).  Because intr_exit takes all of its
