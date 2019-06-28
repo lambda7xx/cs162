@@ -1,4 +1,5 @@
 #include "userprog/syscall.h"
+#include "userprog/process.h"
 #include <stdio.h>
 #include <syscall-nr.h>
 #include "threads/interrupt.h"
@@ -17,7 +18,8 @@ static void check_valid_esp(void * vaddr);
 static int write(int fd,const void * buffer, unsigned size);
 static bool right_stack(void * vaddr);
 static void halt(void);/*halt syscall call to terminates pintos */
-
+/* exec system call */
+static tid_t exec(const char *cmd_line);
 
 
 
@@ -48,7 +50,9 @@ syscall_handler (struct intr_frame *f UNUSED)
 	case SYS_WRITE:
 		 f->eax = write(args[1],(void*)args[2],(unsigned )args[3]);
 		 break;
-	
+	case SYS_EXEC:
+		 f->eax = exec(( char *)args[1]);
+		 break;
 	
 }
 }
@@ -80,5 +84,18 @@ static int  write(int fd, const void *buf, unsigned size)
 
 static void halt(void){
 	shutdown_power_off();
+}
 
+static tid_t exec(const char * cmd_line){
+      tid_t pid = 0;
+      struct lock exec_lock;
+      lock_init(&exec_lock);
+     lock_acquire(&exec_lock); 
+      tid_t temp  = process_execute(cmd_line);
+      if(temp == TID_ERROR)
+		pid = -1;
+      else
+		pid = temp;
+      lock_release(&exec_lock);
+      return pid;
 }
