@@ -93,6 +93,7 @@ start_process (void *file_name_)
   if_.eflags = FLAG_IF | FLAG_MBS;
   success = load (parse_name, &if_.eip, &if_.esp);
  if(success){
+    if_.esp -= 12;/*use to save the syscall argument */
     int len = argc-1;
   char *addr[argc-1];
   while(len >=0){
