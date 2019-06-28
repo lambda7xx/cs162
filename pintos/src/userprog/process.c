@@ -116,12 +116,12 @@ start_process (void *file_name_)
  	int addr_len = argc-1;
  	while(addr_len >= 0){
 		if_.esp -= 4;
-		*(char **)if_.esp = addr[addr_len];/*argv[argc-1] ~ argv[0] */
+		*(char  **)if_.esp = addr[addr_len];/*argv[argc-1] ~ argv[0] */
 		addr_len--;
 	}	
 	 /* argv[0]  address */
  	if_.esp -= 4;  /* set up the argv address */
-	*(char**)if_.esp = if_.esp + 4;
+	*(uintptr_t**)if_.esp = if_.esp + 4;
  /* now we set up the argc */
 	if_.esp -=4;
 	*(int*)if_.esp = argc;
@@ -135,7 +135,7 @@ start_process (void *file_name_)
   if (!success)
     thread_exit ();
    //int *addd = (int*)if_.esp;
-   //printf("%p\n", addd);
+  // printf("%p\n", addd);
   /* Start the user process by simulating a return from an
      interrupt, implemented by intr_exit (in
      threads/intr-stubs.S).  Because intr_exit takes all of its

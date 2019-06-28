@@ -1,0 +1,8 @@
+1.f->esp 必须在0x08048000 ~ 0XC0000000之间
+
+2.系统调用有四个参数args[4]
+	f->esp 为基址:f->esp 存有args[0]
+	f->esp +4 :args[1]
+	f->esp +8 : args[2]
+	f->esp+ 16:args[3]
+	所以:f->esp <= 0xbffffff4
