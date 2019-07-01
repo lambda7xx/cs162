@@ -37,6 +37,9 @@ static struct thread *initial_thread;
 /* Lock used by allocate_tid(). */
 static struct lock tid_lock;
 
+/* semaphore to exec syscall */
+static struct semaphore exec_syscall;
+
 /* Stack frame for kernel_thread(). */
 struct kernel_thread_frame
   {
@@ -92,7 +95,7 @@ thread_init (void)
   lock_init (&tid_lock);
   list_init (&ready_list);
   list_init (&all_list);
-
+  sema_init(&exec_syscall,0);/*init the exec_syscal */
   /* Set up a thread structure for the running thread. */
   initial_thread = running_thread ();
   init_thread (initial_thread, "main", PRI_DEFAULT);
@@ -200,7 +203,10 @@ thread_create (const char *name, int priority,
 
   /* Add to run queue. */
   thread_unblock (t);
-
+ /* new thread are fork its child process */
+  if(strcmp(thread_current()->name,"main") != 0){
+    sema_down(&exec_syscall);
+}
   return tid;
 }
 
@@ -292,6 +298,9 @@ thread_exit (void)
   intr_disable ();
   list_remove (&thread_current()->allelem);
   thread_current ()->status = THREAD_DYING;
+  if(!list_empty(&exec_syscall.waiters)){ /*some process need the semaphore */
+	sema_up(&exec_syscall);/* wake it's parents */
+}
   schedule ();
   NOT_REACHED ();
 }
