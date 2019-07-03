@@ -88,14 +88,10 @@ static void halt(void){
 
 static tid_t exec(const char * cmd_line){
       tid_t pid = 0;
-      struct lock exec_lock;
-      lock_init(&exec_lock);
-     lock_acquire(&exec_lock); 
       tid_t temp  = process_execute(cmd_line);
       if(temp == TID_ERROR)
 		pid = -1;
       else
 		pid = temp;
-      lock_release(&exec_lock);
       return pid;
 }
