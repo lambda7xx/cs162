@@ -53,6 +53,7 @@ process_execute (const char *file_name)
   if (tid == TID_ERROR)
     palloc_free_page (fn_copy);
   else {
+    if(strcmp(thread_current()->name,"main") != 0)
     sema_down(&exec_call);	
 }
   return tid;

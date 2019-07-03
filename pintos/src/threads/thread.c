@@ -294,6 +294,9 @@ thread_exit (void)
   intr_disable ();
   list_remove (&thread_current()->allelem);
   thread_current ()->status = THREAD_DYING;
+  if(list_empty(&ready_list)){
+	thread_unblock(list_entry(list_pop_front(&all_list),struct thread,allelem));
+}
   schedule ();
   NOT_REACHED ();
 }
