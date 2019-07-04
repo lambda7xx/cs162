@@ -15,11 +15,11 @@ syscall_init (void)
 }
 
 static void check_valid_esp(void * vaddr);
-static int write(int fd,const void * buffer, unsigned size);
+static int SYS_Write(int fd,const void * buffer, unsigned size);
 static bool right_stack(void * vaddr);
-static void halt(void);/*halt syscall call to terminates pintos */
+static void SYS_Halt(void);/*halt syscall call to terminates pintos */
 /* exec system call */
-static tid_t exec(const char *cmd_line);
+static tid_t SYS_Exec(const char *cmd_line);
 
 
 
@@ -39,7 +39,7 @@ syscall_handler (struct intr_frame *f UNUSED)
    f->eax = write(args[1],(void*)args[2],(unsigned )args[3]);*/
   switch(args[0]){
 	case SYS_HALT:
-		halt();
+		SYS_Halt();
 		break;
 	case SYS_EXIT:
 		f->eax = args[1];
@@ -48,10 +48,10 @@ syscall_handler (struct intr_frame *f UNUSED)
 		break;
 	
 	case SYS_WRITE:
-		 f->eax = write(args[1],(void*)args[2],(unsigned )args[3]);
+		 f->eax = SYS_Write(args[1],(void*)args[2],(unsigned )args[3]);
 		 break;
 	case SYS_EXEC:
-		 f->eax = exec(( char *)args[1]);
+		 f->eax = SYS_Exec(( char *)args[1]);
 		 break;
 	
 }
@@ -69,7 +69,7 @@ static void check_valid_esp(void * vaddr){
 	thread_exit();
 }
 }
-static int  write(int fd, const void *buf, unsigned size)
+static int SYS_Write(int fd, const void *buf, unsigned size)
 { 
   int result = 0;
  switch(fd){
@@ -82,11 +82,11 @@ static int  write(int fd, const void *buf, unsigned size)
   return result;
 }
 
-static void halt(void){
+static void SYS_Halt(void){
 	shutdown_power_off();
 }
 
-static tid_t exec(const char * cmd_line){
+static tid_t SYS_Exec(const char * cmd_line){
       tid_t pid = 0;
       tid_t temp  = process_execute(cmd_line);
       if(temp == TID_ERROR)
