@@ -6,6 +6,7 @@
 #include "threads/thread.h"
 #include "threads/vaddr.h"
 #include "devices/shutdown.h"
+#include "userprog/pagedir.h"
 static void syscall_handler (struct intr_frame *);
 
 void
@@ -90,12 +91,10 @@ static void SYS_Halt(void){
 }
 
 tid_t SYS_Exec(const char * cmd_line){
-      tid_t pid = 0;
-      tid_t temp  = process_execute(cmd_line);
-      if(temp == TID_ERROR)
-		pid = -1;
-      else
-		pid = temp;
+      if(cmd_line  == NULL || pagedir_get_page (thread_current ()->pagedir, cmd_line) == NULL)
+		return -1;
+      tid_t pid = process_execute(cmd_line);
+      
       return pid;
 }	
  
