@@ -18,18 +18,22 @@
 #include "threads/synch.h"
 #include "threads/thread.h"
 #include "threads/vaddr.h"
+#include "userprog/syscall.h"
 
 static struct semaphore temporary;
 static thread_func start_process NO_RETURN;
 static bool load (const char *cmdline, void (**eip) (void), void **esp);
 static struct semaphore exec_call;/*use this to syn the exec syscall */
+
+
 /* Starts a new thread running a user program loaded from
    FILENAME.  The new thread may be scheduled (and may even exit)
    before process_execute() returns.  Returns the new process's
    thread id, or TID_ERROR if the thread cannot be created. */
 tid_t
 process_execute (const char *file_name)
-{
+ {
+  
   char *fn_copy;
   tid_t tid;
   sema_init(&exec_call,0);  
@@ -52,10 +56,10 @@ process_execute (const char *file_name)
  
   if (tid == TID_ERROR)
     palloc_free_page (fn_copy);
-  else {
-    if(strcmp(thread_current()->name,"main") != 0)
+  if(strcmp(thread_current()->name,"main") != 0){
     sema_down(&exec_call);	
-}
+  }
+  
   return tid;
 }
 
@@ -137,11 +141,12 @@ start_process (void *file_name_)
 	//hex_dump(if_.esp,if_.esp,48,true);
 }
   /* If load failed,  quit */
- 
+  
   palloc_free_page (file_name);
-  if (!success)
+  if (!success){
+    //SYS_Exit(-1);
     thread_exit ();
- 
+ }
   /* Start the user process by simulating a return from an
      interrupt, implemented by intr_exit (in
      threads/intr-stubs.S).  Because intr_exit takes all of its

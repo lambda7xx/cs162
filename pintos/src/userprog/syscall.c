@@ -19,8 +19,9 @@ static int SYS_Write(int fd,const void * buffer, unsigned size);
 static bool right_stack(void * vaddr);
 static void SYS_Halt(void);/*halt syscall call to terminates pintos */
 /* exec system call */
-static tid_t SYS_Exec(const char *cmd_line);
+ tid_t SYS_Exec(const char *cmd_line);
 
+ void SYS_Exit(int status);
 
 
 
@@ -43,8 +44,9 @@ syscall_handler (struct intr_frame *f UNUSED)
 		break;
 	case SYS_EXIT:
 		f->eax = args[1];
-		printf("%s: exit(%d)\n", &thread_current ()->name, args[1]);
-    		thread_exit();
+		SYS_Exit(args[1]);
+		//printf("%s: exit(%d)\n", &thread_current ()->name, args[1]);
+    		//thread_exit();
 		break;
 	
 	case SYS_WRITE:
@@ -65,8 +67,9 @@ static bool right_stack(void * vaddr){
 static void check_valid_esp(void * vaddr){
 	if(!is_user_vaddr(vaddr) || vaddr == NULL || !is_not_in_user_process_address_space(vaddr) || !right_stack(vaddr)){
 	//exit(-1);
-	printf("%s: exit(%d)\n", &thread_current ()->name, -1);
-	thread_exit();
+	SYS_Exit(-1);
+	//printf("%s: exit(%d)\n", &thread_current ()->name, -1);
+	//thread_exit();
 }
 }
 static int SYS_Write(int fd, const void *buf, unsigned size)
@@ -86,7 +89,7 @@ static void SYS_Halt(void){
 	shutdown_power_off();
 }
 
-static tid_t SYS_Exec(const char * cmd_line){
+tid_t SYS_Exec(const char * cmd_line){
       tid_t pid = 0;
       tid_t temp  = process_execute(cmd_line);
       if(temp == TID_ERROR)
@@ -94,4 +97,9 @@ static tid_t SYS_Exec(const char * cmd_line){
       else
 		pid = temp;
       return pid;
+}	
+ 
+void SYS_Exit(int status){
+	 printf("%s: exit(%d)\n", &thread_current ()->name, status);
+         thread_exit();
 }
