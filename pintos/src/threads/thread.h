@@ -98,6 +98,11 @@ struct thread
 #ifdef USERPROG
     /* Owned by userprog/process.c. */
     uint32_t *pagedir;                  /* Page directory. */
+    struct thread * parent; /*the thread's parent */
+    struct list child_list;/*a list to store the thread's children*/
+    struct list_elem child_elem;/* List element for child list */
+    int exit_code ; /* if the thread has parents ,then pass the status to its parent,
+		else 0 */
 #endif
 
     /* Owned by thread.c. */
@@ -139,5 +144,5 @@ int thread_get_nice (void);
 void thread_set_nice (int);
 int thread_get_recent_cpu (void);
 int thread_get_load_avg (void);
-
+struct thread * get_thread_by_tid(int tid);
 #endif /* threads/thread.h */

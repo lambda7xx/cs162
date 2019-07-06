@@ -335,7 +335,23 @@ thread_foreach (thread_action_func *func, void *aux)
       func (t, aux);
     }
 }
+struct thread * get_thread_by_tid(int tid){
+   struct thread *t = NULL;
+   if(tid < 0){
+	t = NULL;
+	return t;
+} 
+ struct list_elem *e;
+ for(e = list_begin(&all_list); e != list_end(&all_list);e = list_next(e)){
+	struct thread *temp = list_entry(e,struct thread, allelem);
 
+	if(temp->tid == tid){
+		t = temp;
+		break;/*find the thread whose tid is tid */
+}
+}
+	return t;
+}
 /* Sets the current thread's priority to NEW_PRIORITY. */
 void
 thread_set_priority (int new_priority)
@@ -468,7 +484,10 @@ init_thread (struct thread *t, const char *name, int priority)
   t->stack = (uint8_t *) t + PGSIZE;
   t->priority = priority;
   t->magic = THREAD_MAGIC;
-
+  #ifdef USERPROG 
+  t->exit_code = 0;
+  list_init(&t->child_list); 
+  #endif
   old_level = intr_disable ();
   list_push_back (&all_list, &t->allelem);
   intr_set_level (old_level);
