@@ -167,8 +167,13 @@ start_process (void *file_name_)
    This function will be implemented in problem 2-2.  For now, it
    does nothing. */
 int
-process_wait (tid_t child_tid UNUSED)
+process_wait (tid_t child_tid )
 {
+ if(child_tid < 0)
+	return -1;
+ struct thread * child_thread = get_thread_by_tid(child_tid);
+  if(child_thread == NULL)
+	return -1;
   sema_down (&temporary);
   return 0;
 }

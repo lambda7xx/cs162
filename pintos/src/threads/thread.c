@@ -485,6 +485,7 @@ init_thread (struct thread *t, const char *name, int priority)
   t->priority = priority;
   t->magic = THREAD_MAGIC;
   #ifdef USERPROG 
+  t->parent = NULL;
   t->exit_code = 0;
   list_init(&t->child_list); 
   #endif

@@ -24,8 +24,9 @@ static void SYS_Halt(void);/*halt syscall call to terminates pintos */
 
  void SYS_Exit(int status);
 
+typedef  int pid_t;
 
-
+int SYS_Wait(pid_t pid);
 
 static void
 syscall_handler (struct intr_frame *f UNUSED)
@@ -56,11 +57,15 @@ syscall_handler (struct intr_frame *f UNUSED)
 	case SYS_EXEC:
 		 f->eax = SYS_Exec(( char *)args[1]);
 		 break;
-	
+	case SYS_WAIT:
+		 f->eax = SYS_Wait((int)args[1]);
+		 break;
 }
 }
 
-
+int SYS_Wait(pid_t pid){
+	return process_wait(pid);
+}
 
 static bool right_stack(void * vaddr){
 	return vaddr <= (void*)0xbffffff4;
