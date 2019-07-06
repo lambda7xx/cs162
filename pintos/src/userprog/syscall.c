@@ -31,6 +31,8 @@ int SYS_Wait(pid_t pid);
 static void
 syscall_handler (struct intr_frame *f UNUSED)
 { check_valid_esp(f->esp);
+  if(pagedir_get_page (thread_current ()->pagedir, f->esp) == NULL)
+	SYS_Exit(-1);
   uint32_t* args = ((uint32_t*) f->esp);
   //printf("System call number: %d\n", args[0]);
   /*if (args[0] == SYS_EXIT) {
