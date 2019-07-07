@@ -106,6 +106,10 @@ tid_t SYS_Exec(const char * cmd_line){
 }	
  
 void SYS_Exit(int status){
+	 if(thread_current()->parent != NULL){
+		thread_current()->parent->exit_code = status;
+		thread_current()->parent = NULL;
+}
 	 printf("%s: exit(%d)\n", &thread_current ()->name, status);
          thread_exit();
 }

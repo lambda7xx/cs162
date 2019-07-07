@@ -59,7 +59,8 @@ process_execute (const char *file_name)
   struct thread *child;
   if(tid != TID_ERROR && strcmp(thread_current()->name,"main") != 0 ){
 	child = get_thread_by_tid(tid);
-	child->parent = thread_current();
+	if(child != NULL)
+		child->parent = thread_current();
 }
   if(strcmp(thread_current()->name,"main") != 0){
     sema_down(&exec_call);	
@@ -180,9 +181,8 @@ process_wait (tid_t child_tid )
   if(child_thread == NULL)
 	return -1;
   sema_down (&temporary);
-  if(child_thread -> parent != thread_current())
-	return -1;
-  return 0;
+  
+  return thread_current()->exit_code;
 }
 
 /* Free the current process's resources. */

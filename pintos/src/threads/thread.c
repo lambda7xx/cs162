@@ -336,21 +336,19 @@ thread_foreach (thread_action_func *func, void *aux)
     }
 }
 struct thread * get_thread_by_tid(int tid){
-   struct thread *t = NULL;
+   struct thread *t = NULL ;
    if(tid < 0){
-	t = NULL;
-	return t;
-} 
+	return NULL;
+}
  struct list_elem *e;
  for(e = list_begin(&all_list); e != list_end(&all_list);e = list_next(e)){
 	struct thread *temp = list_entry(e,struct thread, allelem);
-
 	if(temp->tid == tid){
-		t = temp;
-		break;/*find the thread whose tid is tid */
-}
-}
-	return t;
+		t =  temp;/*find the thread whose tid is tid */
+		break;
+	}
+	}
+	return t;   
 }
 /* Sets the current thread's priority to NEW_PRIORITY. */
 void
