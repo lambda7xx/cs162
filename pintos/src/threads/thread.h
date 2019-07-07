@@ -103,6 +103,7 @@ struct thread
     struct list_elem child_elem;/* List element for child list */
     int exit_code ; /* if the thread has parents ,then pass the status to its parent,
 		else 0 */
+    int exec_code;
 #endif
 
     /* Owned by thread.c. */

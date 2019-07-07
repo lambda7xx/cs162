@@ -65,7 +65,8 @@ process_execute (const char *file_name)
   if(strcmp(thread_current()->name,"main") != 0){
     sema_down(&exec_call);	
   }
-  
+  if(thread_current()->exec_code != 0)
+	return -1;  
   return tid;
 }
 
@@ -147,7 +148,8 @@ start_process (void *file_name_)
 	//hex_dump(if_.esp,if_.esp,48,true);
 }
   /* If load failed,  quit */
-  
+  if(!success && thread_current()->parent != NULL)
+	thread_current()->parent->exec_code  = -1; 
   palloc_free_page (file_name);
   if (!success){
     //SYS_Exit(-1);
