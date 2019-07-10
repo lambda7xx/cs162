@@ -27,7 +27,7 @@ static void SYS_Halt(void);/*halt syscall call to terminates pintos */
 typedef  int pid_t;
 
 int SYS_Wait(pid_t pid);
-
+int SYS_Practice(int i);
 static void
 syscall_handler (struct intr_frame *f UNUSED)
 { check_valid_esp(f->esp);
@@ -62,8 +62,12 @@ syscall_handler (struct intr_frame *f UNUSED)
 	case SYS_WAIT:
 		 f->eax = SYS_Wait((int)args[1]);
 		 break;
+	case SYS_PRACTICE:
+		f->eax = SYS_Practice((int)args[1]);
+		break;
 }
 }
+
 
 int SYS_Wait(pid_t pid){
 	return process_wait(pid);
@@ -108,8 +112,11 @@ tid_t SYS_Exec(const char * cmd_line){
 void SYS_Exit(int status){
 	 if(thread_current()->parent != NULL){
 		thread_current()->parent->exit_code = status;
-		thread_current()->parent = NULL;
 }
 	 printf("%s: exit(%d)\n", &thread_current ()->name, status);
          thread_exit();
+}
+
+int SYS_Practice(int i){
+	return i +1 ;
 }
