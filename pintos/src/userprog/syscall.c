@@ -32,6 +32,8 @@ typedef  int pid_t;
 int SYS_Wait(pid_t pid);
 int SYS_Practice(int i);
 bool SYS_Create(const char *,unsigned );
+int SYS_Open(const char * file);
+
 static void
 syscall_handler (struct intr_frame *f UNUSED)
 { check_valid_esp(f->esp);
@@ -71,6 +73,9 @@ syscall_handler (struct intr_frame *f UNUSED)
 		break;
 	case SYS_CREATE:
 		f->eax = SYS_Create((const char*)args[1],(off_t)args[2]);
+		break;
+	case SYS_OPEN:
+		f->eax = SYS_Open((const char*)args[1]);
 		break;
 }
 }
@@ -137,4 +142,17 @@ bool SYS_Create(const char * file,unsigned initial_size){
 		return false;
 
     	return filesys_create(file,initial_size);
+}
+
+int SYS_Open(const char * file){
+  if(file == NULL)
+	return -1;
+  
+  if(pagedir_get_page (thread_current ()->pagedir,file) == NULL)
+		//return -1;
+                SYS_Exit(-1);
+  if(strcmp(file,"") == 0) /* empty file */
+        return -1;
+
+ return 3;
 }
