@@ -7,6 +7,9 @@
 #include "threads/vaddr.h"
 #include "devices/shutdown.h"
 #include "userprog/pagedir.h"
+#include "filesys/directory.h"
+#include "filesys/filesys.h"
+#include "lib/string.h"
 static void syscall_handler (struct intr_frame *);
 
 void
@@ -67,7 +70,7 @@ syscall_handler (struct intr_frame *f UNUSED)
 		f->eax = SYS_Practice((int)args[1]);
 		break;
 	case SYS_CREATE:
-		f->eax = SYS_Create((const char*)args[1],(unsigned)args[2]);
+		f->eax = SYS_Create((const char*)args[1],(off_t)args[2]);
 		break;
 }
 }
@@ -126,9 +129,12 @@ int SYS_Practice(int i){
 }
 
 bool SYS_Create(const char * file,unsigned initial_size){
-	if(file == NULL || pagedir_get_page (thread_current ()->pagedir,file) == NULL)
+	if( pagedir_get_page (thread_current ()->pagedir,file) == NULL)
 		SYS_Exit(-1);
-        if(initial_size == 0)
+        if(file == NULL )
 		return false;
-    	return true;
+ 	if(strlen(file) >NAME_MAX)
+		return false;
+
+    	return filesys_create(file,initial_size);
 }
