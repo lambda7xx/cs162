@@ -28,6 +28,7 @@ typedef  int pid_t;
 
 int SYS_Wait(pid_t pid);
 int SYS_Practice(int i);
+bool SYS_Create(const char *,unsigned );
 static void
 syscall_handler (struct intr_frame *f UNUSED)
 { check_valid_esp(f->esp);
@@ -64,6 +65,9 @@ syscall_handler (struct intr_frame *f UNUSED)
 		 break;
 	case SYS_PRACTICE:
 		f->eax = SYS_Practice((int)args[1]);
+		break;
+	case SYS_CREATE:
+		f->eax = SYS_Create((const char*)args[1],(unsigned)args[2]);
 		break;
 }
 }
@@ -119,4 +123,12 @@ void SYS_Exit(int status){
 
 int SYS_Practice(int i){
 	return i +1 ;
+}
+
+bool SYS_Create(const char * file,unsigned initial_size){
+	if(file == NULL || pagedir_get_page (thread_current ()->pagedir,file) == NULL)
+		SYS_Exit(-1);
+        if(initial_size == 0)
+		return false;
+    	return true;
 }
