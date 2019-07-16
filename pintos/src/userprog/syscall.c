@@ -5,16 +5,17 @@
 #include "threads/interrupt.h"
 #include "threads/thread.h"
 #include "threads/vaddr.h"
+#include "threads/palloc.h"
 #include "devices/shutdown.h"
 #include "userprog/pagedir.h"
 #include "filesys/directory.h"
 #include "filesys/filesys.h"
 #include "lib/string.h"
 static void syscall_handler (struct intr_frame *);
-
+static struct lock filesys_lock;
 void
 syscall_init (void)
-{
+{ lock_init(&filesys_lock); 
   intr_register_int (0x30, 3, INTR_ON, syscall_handler, "syscall");
 }
 
@@ -33,6 +34,14 @@ int SYS_Wait(pid_t pid);
 int SYS_Practice(int i);
 bool SYS_Create(const char *,unsigned );
 int SYS_Open(const char * file);
+
+struct file_table{
+ struct list_elem  file_elem;/*to insert into the thread's file_list */
+ int fd;
+ struct file *file;
+};
+
+int insert_file_to_thread(struct file * file);
 
 static void
 syscall_handler (struct intr_frame *f UNUSED)
@@ -134,25 +143,48 @@ int SYS_Practice(int i){
 }
 
 bool SYS_Create(const char * file,unsigned initial_size){
-	if( pagedir_get_page (thread_current ()->pagedir,file) == NULL)
+ 	lock_acquire(&filesys_lock);
+	if( pagedir_get_page (thread_current ()->pagedir,file) == NULL){
+		lock_release(&filesys_lock);
 		SYS_Exit(-1);
-        if(file == NULL )
+}
+        if(file == NULL ){
+		lock_release(&filesys_lock);
 		return false;
- 	if(strlen(file) >NAME_MAX)
+}
+ 	if(strlen(file) >NAME_MAX){
+		lock_release(&filesys_lock);
 		return false;
-
-    	return filesys_create(file,initial_size);
+}
+        
+    	bool result =  filesys_create(file,initial_size);
+	lock_release(&filesys_lock);
+	return result;
 }
 
 int SYS_Open(const char * file){
   if(file == NULL)
 	return -1;
-  
   if(pagedir_get_page (thread_current ()->pagedir,file) == NULL)
 		//return -1;
                 SYS_Exit(-1);
   if(strcmp(file,"") == 0) /* empty file */
         return -1;
+  struct file * open_file = filesys_open(file);
+  if(open_file == NULL)
+	return -1;
+  int fd =  insert_file_to_thread(open_file);
+  return fd;
+}
 
- return 3;
+
+int insert_file_to_thread(struct file *file){
+  int fd = thread_current()->fd;
+  thread_current()->fd++;
+  struct file_table * file_table;
+  file_table = palloc_get_page(0);
+  file_table->fd = fd;
+  file_table->file = file;
+  list_push_back(&thread_current()->file_list,&file_table->file_elem);
+  return fd;
 }

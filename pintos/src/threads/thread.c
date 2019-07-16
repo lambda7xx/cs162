@@ -483,6 +483,8 @@ init_thread (struct thread *t, const char *name, int priority)
   t->priority = priority;
   t->magic = THREAD_MAGIC;
   #ifdef USERPROG 
+  t->fd = 3; /*fd 0 and 1 and 2 is used for the STD_IN,STDOUT,STD_ERR*/
+  list_init(&t->file_list);
   t->parent = NULL;
   t->exit_code = 0;
   t->exec_code = 0;

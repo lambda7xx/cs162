@@ -104,6 +104,8 @@ struct thread
     int exit_code ; /* if the thread has parents ,then pass the status to its parent,
 		else 0 */
     int exec_code;
+    int fd ; /* file descriptor */
+   struct list file_list; /*a list to store the file that thread open */
 #endif
 
     /* Owned by thread.c. */
