@@ -149,7 +149,8 @@ file_length (struct file *file)
 }
 
 /* Sets the current position in FILE to NEW_POS bytes from the
-   start of the file. */
+ 
+ start of the file. */
 void
 file_seek (struct file *file, off_t new_pos)
 {
