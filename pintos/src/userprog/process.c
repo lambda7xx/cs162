@@ -174,11 +174,24 @@ process_wait (tid_t child_tid )
 {
  if(child_tid < 0)
 	return -1;
+ if(!find_child(child_tid))
+	return -1;
   sema_down (&temporary);
   
   return thread_current()->exit_code;
 }
-
+bool find_child(tid_t child_tid){
+	bool result = false;
+	struct list_elem *e;
+	for(e = list_begin(&thread_current()->child_list); e != list_end(&thread_current()->child_list);e = list_next(e)){
+	struct thread * t = list_entry(e,struct thread , child_elem);
+	if(t->tid == child_tid){
+		result = true;
+		return result;
+}
+}
+	return result;
+}
 /* Free the current process's resources. */
 void
 process_exit (void)
