@@ -202,7 +202,12 @@ thread_create (const char *name, int priority,
   /* Add to run queue. */
   thread_unblock (t);
  /* new thread are fork its child process */
-  
+  #ifdef USERPROG
+	if(strcmp(thread_current()->name,"man")!= 0){
+		t->parent = thread_current();
+		list_push_back(&thread_current()->child_list,&t->child_elem);
+ }
+  #endif 
   return tid;
 }
 
@@ -471,6 +476,7 @@ init_thread (struct thread *t, const char *name, int priority)
   #ifdef USERPROG 
   t->fd = 3; /*fd 0 and 1 and 2 is used for the STD_IN,STDOUT,STD_ERR*/
   list_init(&t->file_list);
+  sema_init(&t->child_sema,0);
   t->parent = NULL;
   t->exit_code = 0;
   t->exec_code = 0;

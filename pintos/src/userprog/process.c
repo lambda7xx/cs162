@@ -56,12 +56,7 @@ process_execute (const char *file_name)
  
   if (tid == TID_ERROR)
     palloc_free_page (fn_copy);
-  struct thread *child;
-  if(tid != TID_ERROR && strcmp(thread_current()->name,"main") != 0 ){
-	child = get_thread_by_tid(tid);
-	if(child != NULL)
-		child->parent = thread_current();
-}
+ 
   if(strcmp(thread_current()->name,"main") != 0){
     sema_down(&exec_call);	
   }
@@ -178,8 +173,6 @@ int
 process_wait (tid_t child_tid )
 {
  if(child_tid < 0)
-	return -1;
-  if(child_thread == NULL)
 	return -1;
   sema_down (&temporary);
   
