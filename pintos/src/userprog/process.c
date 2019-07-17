@@ -23,7 +23,7 @@
 static struct semaphore temporary;
 static thread_func start_process NO_RETURN;
 static bool load (const char *cmdline, void (**eip) (void), void **esp);
-static struct semaphore exec_call;/*use this to syn the exec syscall */
+//static struct semaphore exec_call;/*use this to syn the exec syscall */
 
 
 /* Starts a new thread running a user program loaded from
@@ -36,7 +36,7 @@ process_execute (const char *file_name)
   
   char *fn_copy;
   tid_t tid;
-  sema_init(&exec_call,0);  
+  //sema_init(&exec_call,0);  
   sema_init (&temporary, 0);
   /* Make a copy of FILE_NAME.
      Otherwise there's a race between the caller and load(). */
@@ -57,9 +57,7 @@ process_execute (const char *file_name)
   if (tid == TID_ERROR)
     palloc_free_page (fn_copy);
  
-  if(strcmp(thread_current()->name,"main") != 0){
-    sema_down(&exec_call);	
-  }
+  sema_down(&thread_current()->exec_sema);
   if(thread_current()->exec_code != 0)
 	return -1;  
   return tid;
@@ -103,7 +101,9 @@ start_process (void *file_name_)
   if_.cs = SEL_UCSEG;
   if_.eflags = FLAG_IF | FLAG_MBS;
   success = load (parse_name, &if_.eip, &if_.esp);
-  sema_up(&exec_call);
+  if(thread_current()->parent != NULL)
+		sema_up(&thread_current()->parent->exec_sema);
+  //sema_up(&exec_call);
  if(success){
     if_.esp -= 12;/*use to save the syscall argument */
     int len = argc-1;
