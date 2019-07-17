@@ -200,7 +200,7 @@ thread_create (const char *name, int priority,
   sf->ebp = 0;
 
   /* Add to run queue. */
-  thread_unblock (t);
+  //thread_unblock (t);
  /* new thread are fork its child process */
   #ifdef USERPROG
 	if(strcmp(thread_current()->name,"man")!= 0){
@@ -208,6 +208,7 @@ thread_create (const char *name, int priority,
 		list_push_back(&thread_current()->child_list,&t->child_elem);
  }
   #endif 
+  thread_unblock(t);
   return tid;
 }
 

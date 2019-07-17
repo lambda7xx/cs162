@@ -176,7 +176,7 @@ process_wait (tid_t child_tid )
 	return -1;
  if(!find_child(child_tid))
 	return -1;
-  sema_down (&temporary);
+  sema_down (&thread_current()->child_sema);
   
   return thread_current()->exit_code;
 }
