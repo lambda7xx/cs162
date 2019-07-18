@@ -7,6 +7,7 @@
 #include "threads/vaddr.h"
 #include "threads/palloc.h"
 #include "devices/shutdown.h"
+#include "devices/input.h"
 #include "userprog/pagedir.h"
 #include "filesys/directory.h"
 #include "filesys/filesys.h"
@@ -124,15 +125,21 @@ static void check_valid_esp(void * vaddr){
 }
 static int SYS_Write(int fd, const void *buf, unsigned size)
 { 
-  int result = 0;
- switch(fd){
-   case 1:
+  if(size == 0)
+	return 0;
+  if(pagedir_get_page(thread_current()->pagedir,buf)==NULL)
+	SYS_Exit(-1);
+   if(fd == 1){
 	putbuf((char *)buf,size);
-	result = size;
-	break;
+	return size;
+}
+  else{
+	struct file *file = find_file(fd);
+	if(file == NULL)
+		SYS_Exit(-1);
+	return file_write(file,buf,size);
 }
   
-  return result;
 }
 
 static void SYS_Halt(void){
@@ -260,9 +267,9 @@ int SYS_Read(int fd,void * buffer, unsigned size ){
 		return 0;
 	if(buffer == NULL)
 		SYS_Exit(-1);
-	if(pagedir_get_page (thread_current ()->pagedir, file) == NULL)
-            return -1;
+	/*if(pagedir_get_page (thread_current ()->pagedir, file) == NULL)
+            return -1; */
 
-	return 0;
+	return file_read(file,buffer,size);
 
 }
