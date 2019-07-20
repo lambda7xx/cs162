@@ -39,8 +39,9 @@ static int SYS_Open(const char * file);/*Open a file */
 static bool SYS_Remove(const char *file);/*Delete a file */
 static int SYS_Filesize(int fd);/*Obtain a file's size */
 static int SYS_Read(int fd,void *buffer,unsigned size);/*Read from a file */
-
-
+static void  SYS_Seek(int fd,unsigned position);/*change position in a file */
+static unsigned SYS_Tell(int fd);/*report current positionin a file */
+static void SYS_Close(int fd);/*close a file */
 
 struct file_table{
  struct list_elem  file_elem;/*to insert into the thread's file_list */
@@ -58,14 +59,6 @@ syscall_handler (struct intr_frame *f UNUSED)
   if(pagedir_get_page (thread_current ()->pagedir, f->esp) == NULL)
 	SYS_Exit(-1);
   uint32_t* args = ((uint32_t*) f->esp);
-  //printf("System call number: %d\n", args[0]);
-  /*if (args[0] == SYS_EXIT) {
-    f->eax = args[1];
-    printf("%s: exit(%d)\n", &thread_current ()->name, args[1]);
-    thread_exit();
-  }
- else if(args[0] == SYS_WRITE){
-   f->eax = write(args[1],(void*)args[2],(unsigned )args[3]);*/
   switch(args[0]){
 	case SYS_HALT:
 		SYS_Halt();
@@ -73,8 +66,6 @@ syscall_handler (struct intr_frame *f UNUSED)
 	case SYS_EXIT:
 		f->eax = args[1];
 		SYS_Exit(args[1]);
-		//printf("%s: exit(%d)\n", &thread_current ()->name, args[1]);
-    		//thread_exit();
 		break;
 	
 	case SYS_WRITE:
@@ -104,6 +95,15 @@ syscall_handler (struct intr_frame *f UNUSED)
 	case SYS_READ:
 		f->eax = SYS_Read((int)args[1],(void*)args[2],(unsigned)args[3]);
 		break;
+	case SYS_SEEK:
+		SYS_Seek((int)args[1],(unsigned)args[2]);
+		break;
+	case SYS_TELL:
+		f->eax = SYS_Tell((int)args[1]);
+		break;
+	case SYS_CLOSE:
+		SYS_Close((int)args[1]);
+		break;
 }
 }
 
@@ -117,27 +117,34 @@ static bool right_stack(void * vaddr){
 }
 static void check_valid_esp(void * vaddr){
 	if(!is_user_vaddr(vaddr) || vaddr == NULL || !is_not_in_user_process_address_space(vaddr) || !right_stack(vaddr)){
-	//exit(-1);
 	SYS_Exit(-1);
-	//printf("%s: exit(%d)\n", &thread_current ()->name, -1);
-	//thread_exit();
 }
 }
 static int SYS_Write(int fd, const void *buf, unsigned size)
 { 
-  if(size == 0)
+ lock_acquire(&filesys_lock);
+  if(size == 0){
+	lock_release(&filesys_lock);
 	return 0;
-  if(pagedir_get_page(thread_current()->pagedir,buf)==NULL)
+}
+  if(pagedir_get_page(thread_current()->pagedir,buf)==NULL){
+	lock_release(&filesys_lock);
 	SYS_Exit(-1);
+}
    if(fd == 1){
 	putbuf((char *)buf,size);
+	lock_release(&filesys_lock);
 	return size;
 }
   else{
 	struct file *file = find_file(fd);
-	if(file == NULL)
+	if(file == NULL){
+		lock_release(&filesys_lock);
 		SYS_Exit(-1);
-	return file_write(file,buf,size);
+	}
+	int res =  file_write(file,buf,size);
+	lock_release(&filesys_lock);
+	return res;
 }
   
 }
@@ -191,17 +198,26 @@ static bool SYS_Create(const char * file,unsigned initial_size){
 }
 
 static int SYS_Open(const char * file){
-  if(file == NULL)
+  lock_acquire(&filesys_lock);
+  if(file == NULL){
+	lock_release(&filesys_lock);
 	return -1;
-  if(pagedir_get_page (thread_current ()->pagedir,file) == NULL)
-		//return -1;
+ }
+  if(pagedir_get_page (thread_current ()->pagedir,file) == NULL){
+		lock_release(&filesys_lock);
                 SYS_Exit(-1);
-  if(strcmp(file,"") == 0) /* empty file */
+}
+  if(strcmp(file,"") == 0) /* empty file */{
+	lock_release(&filesys_lock);
         return -1;
+}
   struct file * open_file = filesys_open(file);
-  if(open_file == NULL)
+  if(open_file == NULL){
+	lock_release(&filesys_lock);
 	return -1;
+}
   int fd =  insert_file_to_thread(open_file);
+  lock_release(&filesys_lock);
   return fd;
 }
 
@@ -218,11 +234,15 @@ int insert_file_to_thread(struct file *file){
 }
 
 static bool SYS_Remove(const char *file){
-   if(file == NULL)
+   lock_acquire(&filesys_lock);
+   if(file == NULL){
+	lock_release(&filesys_lock);
         return  false;
-  if(pagedir_get_page (thread_current ()->pagedir,file) == NULL)
-                //return -1;
+  }
+  if(pagedir_get_page (thread_current ()->pagedir,file) == NULL){
+		lock_release(&filesys_lock);
                 SYS_Exit(-1);
+}
   return filesys_remove(file);
 }
 
@@ -253,23 +273,81 @@ int SYS_Filesize(int fd){
 
 
 int SYS_Read(int fd,void * buffer, unsigned size ){
-	if(size == 0)
+        lock_acquire(&filesys_lock);
+	if(size == 0){
+		lock_release(&filesys_lock);
 		return 0;
-	if(fd == 0)
-		return input_getc();
-	if(buffer > (void*)0xbffffff4)
+	}
+	if(fd == 0){
+		int res =  input_getc();
+		lock_release(&filesys_lock);	
+		return res;
+	}
+	if(buffer > (void*)0xbffffff4){
+		lock_release(&filesys_lock);
 		SYS_Exit(-1);
-	//check_valid_esp(buffer);
-       //if(pagedir_get_page (thread_current ()->pagedir, buffer) == NULL)
-         //    return -1; 
-	struct file *file = find_file(fd);
-	if(file == NULL)
-		return 0;
-	if(buffer == NULL)
-		SYS_Exit(-1);
-	/*if(pagedir_get_page (thread_current ()->pagedir, file) == NULL)
-            return -1; */
+	}
 
+	struct file *file = find_file(fd);
+	if(file == NULL){
+		lock_release(&filesys_lock);
+		return 0;
+	}
+	if(buffer == NULL){
+		lock_release(&filesys_lock);
+		SYS_Exit(-1);
+	}
+	lock_release(&filesys_lock);
 	return file_read(file,buffer,size);
 
+}
+
+
+static void SYS_Seek(int fd, unsigned position){
+	if(fd <=1 )
+	   SYS_Exit(-1);
+	lock_acquire(&filesys_lock);
+	struct file *file = find_file(fd);
+	if(file == NULL)/*no file whose fd eaual fd */{
+		lock_release(&filesys_lock);
+		SYS_Exit(-1);
+		}
+	lock_release(&filesys_lock);
+	file_seek(file,position);
+}
+
+
+/*return the position of the next byte to be read */
+static unsigned SYS_Tell(int fd){
+	 if(fd <=1 )
+           SYS_Exit(-1);
+        lock_acquire(&filesys_lock);
+        struct file *file = find_file(fd);
+        if(file == NULL)/*no file whose fd eaual fd */{
+                lock_release(&filesys_lock);
+                SYS_Exit(-1);
+                }
+        lock_release(&filesys_lock);
+        return file_tell(file);
+
+}
+
+static void SYS_Close(int fd){
+	if(fd <= 1)
+		SYS_Exit(-1);
+	struct file *file = find_file(fd);
+	if(file == NULL)
+		SYS_Exit(-1);
+	lock_acquire(&filesys_lock);
+	 struct list_elem *e;
+	  for(e = list_begin(&thread_current()->file_list); e != list_end(&thread_current()->file_list); e = list_next(e)){
+         struct file_table * file_t = list_entry(e,struct file_table,file_elem);
+        if(file_t->fd == fd){
+                file = file_t->file;
+		list_remove(&file_t->file_elem);
+                break;
+}
+	}
+	file_close(file);
+	lock_release(&filesys_lock);
 }

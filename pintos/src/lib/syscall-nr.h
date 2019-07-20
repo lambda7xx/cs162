@@ -16,7 +16,7 @@ enum
     SYS_READ,                   /* Read from a file. */
   
 
-  SYS_WRITE,                  /* Write to a file. */
+    SYS_WRITE,                  /* Write to a file. */
     SYS_SEEK,                   /* Change position in a file. */
     SYS_TELL,                   /* Report current position in a file. */
     SYS_CLOSE,                  /* Close a file. */
