@@ -6,7 +6,7 @@
 #include <stdint.h>
 #include "threads/synch.h"
 #include "threads/fixed-point.h"
-
+#include "filesys/file.h"
 /* States in a thread's life cycle. */
 enum thread_status
   {
@@ -106,7 +106,8 @@ struct thread
     struct semaphore exec_sema;
     int exec_code;
     int fd ; /* file descriptor */
-   struct list file_list; /*a list to store the file that thread open */
+    struct list file_list; /*a list to store the file that thread open */
+    struct file * file ; 
 #endif
 
     /* Owned by thread.c. */

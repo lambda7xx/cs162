@@ -1,14 +1,17 @@
 #include "userprog/syscall.h"
 #include "userprog/process.h"
 #include <stdio.h>
+#include <list.h>
 #include <syscall-nr.h>
 #include "threads/interrupt.h"
 #include "threads/thread.h"
+#include "threads/malloc.h"
 #include "threads/vaddr.h"
 #include "threads/palloc.h"
 #include "devices/shutdown.h"
 #include "devices/input.h"
 #include "userprog/pagedir.h"
+#include "userprog/syscall.h"
 #include "filesys/directory.h"
 #include "filesys/filesys.h"
 #include "filesys/file.h"
@@ -35,7 +38,8 @@ typedef  int pid_t;
 static int SYS_Wait(pid_t pid);/* wait for a child process to die*/
 static int SYS_Practice(int i);/*return arg increment by 1 */
 static bool SYS_Create(const char *,unsigned );/*Create a file */
-static int SYS_Open(const char * file);/*Open a file */
+	
+
 static bool SYS_Remove(const char *file);/*Delete a file */
 static int SYS_Filesize(int fd);/*Obtain a file's size */
 static int SYS_Read(int fd,void *buffer,unsigned size);/*Read from a file */
@@ -43,13 +47,16 @@ static void  SYS_Seek(int fd,unsigned position);/*change position in a file */
 static unsigned SYS_Tell(int fd);/*report current positionin a file */
 static void SYS_Close(int fd);/*close a file */
 
-struct file_table{
- struct list_elem  file_elem;/*to insert into the thread's file_list */
+//static void close_file(void);
+
+
+/*struct file_table{
+ struct list_elem  file_elem;//to insert into the thread's file_list 
  int fd;
  struct file *file;
-};
+};*/
 
-int insert_file_to_thread(struct file * file);
+//int insert_file_to_thread(struct file * file);
 
 struct file *find_file(int fd);
 
@@ -143,6 +150,7 @@ static int SYS_Write(int fd, const void *buf, unsigned size)
 		SYS_Exit(-1);
 	}
 	int res =  file_write(file,buf,size);
+	//file_deny_write(file);
 	lock_release(&filesys_lock);
 	return res;
 }
@@ -166,9 +174,11 @@ static void SYS_Halt(void){
 		sema_up(&thread_current()->parent->child_sema);
 		thread_current()->parent->exit_code = status;
 		//thread->parent = NULL;
+ 		file_close(thread_current()->parent->file);
 		list_remove(&thread_current()->child_elem);
 		//thread_current()->parent = NULL;
-}
+	}
+	 //close_file();
 	 printf("%s: exit(%d)\n", &thread_current ()->name, status);
          thread_exit();
 }
@@ -197,7 +207,7 @@ static bool SYS_Create(const char * file,unsigned initial_size){
 	return result;
 }
 
-static int SYS_Open(const char * file){
+int SYS_Open(const char * file){
   lock_acquire(&filesys_lock);
   if(file == NULL){
 	lock_release(&filesys_lock);
@@ -225,22 +235,21 @@ static int SYS_Open(const char * file){
 int insert_file_to_thread(struct file *file){
   int fd = thread_current()->fd;
   thread_current()->fd++;
-  struct file_table * file_table;
-  file_table = palloc_get_page(0);
-  file_table->fd = fd;
-  file_table->file = file;
-  list_push_back(&thread_current()->file_list,&file_table->file_elem);
+  struct file_table * file_t = malloc(sizeof(struct file_table));
+  file_t->fd = fd;
+  file_t->file = file;
+  list_push_back(&thread_current()->file_list,&file_t->file_elem);
   return fd;
 }
 
 static bool SYS_Remove(const char *file){
-   lock_acquire(&filesys_lock);
+   //lock_acquire(&filesys_lock);
    if(file == NULL){
-	lock_release(&filesys_lock);
+	//lock_release(&filesys_lock);
         return  false;
   }
   if(pagedir_get_page (thread_current ()->pagedir,file) == NULL){
-		lock_release(&filesys_lock);
+		//;lock_release(&filesys_lock);
                 SYS_Exit(-1);
 }
   return filesys_remove(file);
@@ -297,8 +306,11 @@ int SYS_Read(int fd,void * buffer, unsigned size ){
 		lock_release(&filesys_lock);
 		SYS_Exit(-1);
 	}
+	//lock_release(&filesys_lock);
+	int res= file_read(file,buffer,size);
+	//file_deny_write(file);
 	lock_release(&filesys_lock);
-	return file_read(file,buffer,size);
+	return res;
 
 }
 
@@ -312,8 +324,11 @@ static void SYS_Seek(int fd, unsigned position){
 		lock_release(&filesys_lock);
 		SYS_Exit(-1);
 		}
-	lock_release(&filesys_lock);
+	//lock_release(&filesys_lock);
 	file_seek(file,position);
+	if(position == 0)
+		file_allow_write(file);
+	lock_release(&filesys_lock);
 }
 
 
@@ -351,3 +366,15 @@ static void SYS_Close(int fd){
 	file_close(file);
 	lock_release(&filesys_lock);
 }
+
+/*when the thread_current exit, we should close the file that thread open */
+/*static void close_file(void){
+ struct list file_list = thread_current()->file_list;
+ if(list_empty(&file_list))
+	return ;
+    struct list_elem *e;
+    for(e = list_begin(&file_list); e != list_end(&file_list); e = list_next(e)){
+         struct file_table * file_t = list_entry(e,struct file_table,file_elem);
+         file_close(file_t->file);
+	}
+}*/

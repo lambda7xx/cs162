@@ -19,13 +19,13 @@
 #include "threads/thread.h"
 #include "threads/vaddr.h"
 #include "userprog/syscall.h"
-
+#include "threads/malloc.h"
 static struct semaphore temporary;
 static thread_func start_process NO_RETURN;
 static bool load (const char *cmdline, void (**eip) (void), void **esp);
 //static struct semaphore exec_call;/*use this to syn the exec syscall */
 
-
+//struct file *open_file;
 /* Starts a new thread running a user program loaded from
    FILENAME.  The new thread may be scheduled (and may even exit)
    before process_execute() returns.  Returns the new process's
@@ -177,7 +177,7 @@ process_wait (tid_t child_tid )
  if(!find_child(child_tid))
 	return -1;
   sema_down (&thread_current()->child_sema);
-  
+  //file_close(open_file);
   return thread_current()->exit_code;
 }
 bool find_child(tid_t child_tid){
@@ -188,8 +188,8 @@ bool find_child(tid_t child_tid){
 	if(t->tid == child_tid){
 		result = true;
 		return result;
-}
-}
+		}
+	}
 	return result;
 }
 /* Free the current process's resources. */
@@ -325,6 +325,7 @@ load (const char *file_name, void (**eip) (void), void **esp)
 
   /* Open executable file. */
   file = filesys_open (file_name);
+  //file_deny_write(file);
   if (file == NULL)
     {
       printf ("load: %s: open failed\n", file_name);
@@ -413,8 +414,16 @@ load (const char *file_name, void (**eip) (void), void **esp)
   success = true;
 
  done:
+  if(file != NULL){
+   //SYS_Open(file_name);
+   if(thread_current()->parent != NULL)
+	thread_current()->parent->file = file;
+  //insert_file_to_thread(file);
+  file_deny_write(file);
+  //open_file = file;
+  }
   /* We arrive here whether the load is successful or not. */
-  file_close (file);
+  //file_close (file);
   return success;
 }
 
