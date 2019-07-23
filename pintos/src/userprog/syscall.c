@@ -47,11 +47,22 @@ static void  SYS_Seek(int fd,unsigned position);/*change position in a file */
 static unsigned SYS_Tell(int fd);/*report current positionin a file */
 static void SYS_Close(int fd);/*close a file */
 
+<<<<<<< HEAD
 //static void close_file(void);
 
 
 /*struct file_table{
  struct list_elem  file_elem;//to insert into the thread's file_list 
+=======
+
+static int get_user(const uint8_t *uaddr);
+
+static bool put_user(uint8_t *udst, uint8_t byte);
+
+
+struct file_table{
+ struct list_elem  file_elem;/*to insert into the thread's file_list */
+>>>>>>> 064569a7b5c007e997ea96cd3b0a21defd261ff1
  int fd;
  struct file *file;
 };*/
@@ -128,7 +139,13 @@ static void check_valid_esp(void * vaddr){
 }
 }
 static int SYS_Write(int fd, const void *buf, unsigned size)
-{ 
+{
+ if(buf > (void*)0Xc0000000)
+	SYS_Exit(-1);
+
+ uint8_t * temp =(uint8_t *) buf; 
+ if(get_user(temp) == -1 || (get_user(temp +size) == -1))
+	SYS_Exit(-1);
  lock_acquire(&filesys_lock);
   if(size == 0){
 	lock_release(&filesys_lock);
@@ -282,6 +299,15 @@ int SYS_Filesize(int fd){
 
 
 int SYS_Read(int fd,void * buffer, unsigned size ){
+	if(buffer > (void *)0xc0000000)
+		SYS_Exit(-1);
+	uint8_t *temp = (uint8_t*)buffer;
+	unsigned i;
+	for(i = 0; i < size; i++){
+		if(!put_user(temp,1))
+			SYS_Exit(-1);
+		temp++;
+	}
         lock_acquire(&filesys_lock);
 	if(size == 0){
 		lock_release(&filesys_lock);
@@ -367,6 +393,7 @@ static void SYS_Close(int fd){
 	lock_release(&filesys_lock);
 }
 
+<<<<<<< HEAD
 /*when the thread_current exit, we should close the file that thread open */
 /*static void close_file(void){
  struct list file_list = thread_current()->file_list;
@@ -378,3 +405,23 @@ static void SYS_Close(int fd){
          file_close(file_t->file);
 	}
 }*/
+=======
+
+/*Read a byte at user virtual address uaddr,uaddr must be blow PHYS_BASE;
+  returns the byte value if successfule,-1 if a segfaule occurred */
+static int get_user(const uint8_t *uaddr){
+	int result ;
+	asm("movl $1f, %0; movzbl %1, %0;1:"
+	     :"=&a"(result):"m"(*uaddr));
+	return result;
+	}
+
+/*write BYTE to user address UDST .UDST
+  must be blow PHYS_BASE.Returns true if successful,false if a segfault occrred */
+static bool put_user(uint8_t *udst,uint8_t byte){
+	int error_code;
+	asm("movl $1f, %0; movb %b2 , %1;1:"
+	    :"=&a"(error_code),"=m"(*udst):"q"(byte));
+	return error_code != -1;
+	}
+>>>>>>> 064569a7b5c007e997ea96cd3b0a21defd261ff1
