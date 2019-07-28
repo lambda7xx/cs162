@@ -47,6 +47,7 @@ static void  SYS_Seek(int fd,unsigned position);/*change position in a file */
 static unsigned SYS_Tell(int fd);/*report current positionin a file */
 static void SYS_Close(int fd);/*close a file */
 
+static void close_file(void);
 //static void close_file(void);
 
 
@@ -170,16 +171,13 @@ static void SYS_Halt(void){
 }	
  
  void SYS_Exit(int status){
-	 if(thread_current()->parent != NULL){
-		sema_up(&thread_current()->parent->child_sema);
-		thread_current()->parent->exit_code = status;
-		//thread->parent = NULL;
- 		file_close(thread_current()->parent->file);
-		list_remove(&thread_current()->child_elem);
-		//thread_current()->parent = NULL;
-	}
-	 //close_file();
-	 printf("%s: exit(%d)\n", &thread_current ()->name, status);
+	 struct thread * cur = thread_current();
+	 
+ 	file_close(cur->file);
+	
+	 cur->exit_code = status;
+	 close_file();/* close the file that current thread open */
+	 printf("%s: exit(%d)\n", cur->name, status);
          thread_exit();
 }
 
@@ -366,7 +364,18 @@ static void SYS_Close(int fd){
 	file_close(file);
 	lock_release(&filesys_lock);
 }
+/* when a  process exit,we should close the file that the process open */
+static void close_file(void){
+	struct list_elem *e, *next;
+	struct file * file;
+	struct thread  *cur = thread_current();
+ 	for(e = list_begin(&cur->file_list); e != list_end(&cur->file_list); e = next){
+		file = list_entry(e,struct file_table, file_elem)->file;
+		file_close(file);
+		next = list_remove(e);
 
+	}
+}
 /*when the thread_current exit, we should close the file that thread open */
 /*static void close_file(void){
  struct list file_list = thread_current()->file_list;

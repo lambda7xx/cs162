@@ -4,6 +4,7 @@
 #include <round.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <list.h>
 #include <string.h>
 #include "userprog/gdt.h"
 #include "userprog/pagedir.h"
@@ -54,9 +55,10 @@ process_execute (const char *file_name)
   /* Create a new thread to execute FILE_NAME. */
   tid = thread_create (parse_name, PRI_DEFAULT, start_process, fn_copy);
  
-  if (tid == TID_ERROR)
+  if (tid == TID_ERROR){
     palloc_free_page (fn_copy);
- 
+    return -1;
+  }
   sema_down(&thread_current()->exec_sema);
   if(thread_current()->exec_code != 0)
 	return -1;  
@@ -174,13 +176,24 @@ process_wait (tid_t child_tid )
 {
  if(child_tid < 0)
 	return -1;
- if(!find_child(child_tid))
+  struct thread * cur = thread_current();
+  if(list_empty(&cur->child_list)) /* cur has no child */
 	return -1;
-  sema_down (&thread_current()->child_sema);
-  //file_close(open_file);
-  return thread_current()->exit_code;
+  struct list_elem *e;
+  for(e = list_begin(&cur->child_list); e != list_end(&cur->child_list);e = list_next(e)){
+     struct thread * t = list_entry(e, struct thread, child_elem);
+     if(t->tid == child_tid){
+	list_remove(&t->child_elem);
+	sema_down(&cur->child_sema);
+	int status = t->exit_code;
+	sema_up(&t->child_sema);/*wake up cur's child, ,make cur sleep */
+	//list_remove(t->child_elme);
+	return status;
+	}
 }
-bool find_child(tid_t child_tid){
+ 	return -1;
+}
+/*bool find_child(tid_t child_tid){
 	bool result = false;
 	struct list_elem *e;
 	for(e = list_begin(&thread_current()->child_list); e != list_end(&thread_current()->child_list);e = list_next(e)){
@@ -191,14 +204,24 @@ bool find_child(tid_t child_tid){
 		}
 	}
 	return result;
-}
+}*/
 /* Free the current process's resources. */
 void
 process_exit (void)
 {
   struct thread *cur = thread_current ();
   uint32_t *pd;
-
+  /* set all parents  to NULL */
+  struct list_elem *e, *next;
+  for(e = list_begin(&cur->child_list); e != list_end(&cur->child_list);e = next){
+	struct thread * child = list_entry(e,struct thread ,child_elem);
+	next = list_remove(e);
+	child->parent = NULL;
+}
+  if(cur->parent != NULL){
+	sema_up(&cur->parent->child_sema);
+	sema_down(&cur->child_sema);
+}
   /* Destroy the current process's page directory and switch back
      to the kernel-only page directory. */
   pd = cur->pagedir;
@@ -325,7 +348,6 @@ load (const char *file_name, void (**eip) (void), void **esp)
 
   /* Open executable file. */
   file = filesys_open (file_name);
-  //file_deny_write(file);
   if (file == NULL)
     {
       printf ("load: %s: open failed\n", file_name);
@@ -415,15 +437,10 @@ load (const char *file_name, void (**eip) (void), void **esp)
 
  done:
   if(file != NULL){
-   //SYS_Open(file_name);
-   if(thread_current()->parent != NULL)
-	thread_current()->parent->file = file;
-  //insert_file_to_thread(file);
-  file_deny_write(file);
-  //open_file = file;
+  	thread_current()->file = file;
+  	file_deny_write(file);
   }
   /* We arrive here whether the load is successful or not. */
-  //file_close (file);
   return success;
 }
 
