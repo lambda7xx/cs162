@@ -367,23 +367,15 @@ static void SYS_Close(int fd){
 /* when a  process exit,we should close the file that the process open */
 static void close_file(void){
 	struct list_elem *e, *next;
-	struct file * file;
+	struct file_table *file_t = NULL;
+	struct file * file = NULL;
 	struct thread  *cur = thread_current();
  	for(e = list_begin(&cur->file_list); e != list_end(&cur->file_list); e = next){
-		file = list_entry(e,struct file_table, file_elem)->file;
+		file_t = list_entry(e,struct file_table, file_elem);
+		file = file_t->file;
 		file_close(file);
+		palloc_free_page(file_t);	
 		next = list_remove(e);
 
 	}
 }
-/*when the thread_current exit, we should close the file that thread open */
-/*static void close_file(void){
- struct list file_list = thread_current()->file_list;
- if(list_empty(&file_list))
-	return ;
-    struct list_elem *e;
-    for(e = list_begin(&file_list); e != list_end(&file_list); e = list_next(e)){
-         struct file_table * file_t = list_entry(e,struct file_table,file_elem);
-         file_close(file_t->file);
-	}
-}*/

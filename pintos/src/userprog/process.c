@@ -187,24 +187,11 @@ process_wait (tid_t child_tid )
 	sema_down(&cur->child_sema);
 	int status = t->exit_code;
 	sema_up(&t->child_sema);/*wake up cur's child, ,make cur sleep */
-	//list_remove(t->child_elme);
 	return status;
 	}
 }
  	return -1;
 }
-/*bool find_child(tid_t child_tid){
-	bool result = false;
-	struct list_elem *e;
-	for(e = list_begin(&thread_current()->child_list); e != list_end(&thread_current()->child_list);e = list_next(e)){
-	struct thread * t = list_entry(e,struct thread , child_elem);
-	if(t->tid == child_tid){
-		result = true;
-		return result;
-		}
-	}
-	return result;
-}*/
 /* Free the current process's resources. */
 void
 process_exit (void)
