@@ -373,8 +373,7 @@ static void close_file(void){
  	for(e = list_begin(&cur->file_list); e != list_end(&cur->file_list); e = next){
 		file_t = list_entry(e,struct file_table, file_elem);
 		file = file_t->file;
-		file_close(file);
-		palloc_free_page(file_t);	
+		file_close(file);	
 		next = list_remove(e);
 
 	}

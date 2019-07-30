@@ -477,6 +477,7 @@ init_thread (struct thread *t, const char *name, int priority)
   t->fd = 3; /*fd 0 and 1 and 2 is used for the STD_IN,STDOUT,STD_ERR*/
   list_init(&t->file_list);
   sema_init(&t->child_sema,0);
+  sema_init(&t->child_exec_sema,0);
   sema_init(&t->exec_sema,0);
   t->parent = NULL;
   t->file = NULL;

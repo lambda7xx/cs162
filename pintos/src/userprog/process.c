@@ -186,7 +186,7 @@ process_wait (tid_t child_tid )
 	list_remove(&t->child_elem);
 	sema_down(&cur->child_sema);
 	int status = t->exit_code;
-	sema_up(&t->child_sema);/*wake up cur's child, ,make cur sleep */
+	sema_up(&t->child_exec_sema);/*wake up cur's child, ,make cur sleep */
 	return status;
 	}
 }
@@ -207,7 +207,7 @@ process_exit (void)
 }
   if(cur->parent != NULL){
 	sema_up(&cur->parent->child_sema);
-	sema_down(&cur->child_sema);
+	sema_down(&cur->child_exec_sema);
 }
   /* Destroy the current process's page directory and switch back
      to the kernel-only page directory. */

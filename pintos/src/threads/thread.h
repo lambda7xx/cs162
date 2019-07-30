@@ -104,6 +104,7 @@ struct thread
     int exit_code ; /* if the thread has parents ,then pass the status to its parent,else 0 */
     struct semaphore child_sema;/* use this to wait syn */
     struct semaphore exec_sema;
+    struct semaphore child_exec_sema;
     int exec_code;
     int fd ; /* file descriptor */
     struct list file_list; /*a list to store the file that thread open */
